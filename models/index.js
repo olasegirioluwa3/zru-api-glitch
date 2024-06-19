@@ -1,17 +1,20 @@
-import fs from "fs";
-import path from "path";
-import { exec } from "child_process";
-import process from "process";
-import { fileURLToPath } from "url";
-import Sequelize from "sequelize";
+import dotenv from 'dotenv';
+dotenv.config();
+
+import fs from 'fs';
+import path from 'path';
+import { exec } from 'child_process';
+import process from 'process';
+import { fileURLToPath, pathToFileURL } from 'url';
+import Sequelize from 'sequelize';
 
 // Convert the URL of the current module to a file path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || "development";
-const configPath = path.join(__dirname, "..", "config", "config.json");
+const env = process.env.NODE_ENV || 'development';
+const configPath = path.join(__dirname, '..', 'config', 'config.json');
 const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))[env];
 const db = {};
 
@@ -54,21 +57,21 @@ function exportDatabase() {
   childProcess.stderr.pipe(process.stderr);
 }
 
-// Export the database before syncing
+// Export the database before syncing (uncomment to enable)
 // exportDatabase();
 
 const modelFiles = fs.readdirSync(__dirname)
   .filter((file) => {
     return (
-      file.indexOf(".") !== 0 &&
+      file.indexOf('.') !== 0 &&
       file !== basename &&
-      file.slice(-3) === ".js" &&
-      file.indexOf(".test.js") === -1
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
     );
   });
 
 for (const file of modelFiles) {
-  const model = (await import(path.join(__dirname, file))).default(sequelize, Sequelize.DataTypes);
+  const model = (await import(pathToFileURL(path.join(__dirname, file)).href)).default(sequelize, Sequelize.DataTypes);
   db[model.name] = model;
 }
 
@@ -76,10 +79,10 @@ for (const file of modelFiles) {
 // sequelize
 //   .sync({ force: true })
 //   .then(() => {
-//     console.log("All tables have been dropped and re-synced.");
+//     console.log('All tables have been dropped and re-synced.');
 //   })
 //   .catch((err) => {
-//     console.error("Error dropping and re-syncing tables:", err);
+//     console.error('Error dropping and re-syncing tables:', err);
 //   });
 
 Object.keys(db).forEach((modelName) => {

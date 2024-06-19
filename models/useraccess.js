@@ -38,7 +38,7 @@ const initializeUserAccessModel = (sequelize) => {
       primaryKey: true,
       allowNull: false,
     },
-    saId: {
+    rcId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0
@@ -48,8 +48,8 @@ const initializeUserAccessModel = (sequelize) => {
       allowNull: false
     },
     role: {
-      type: DataTypes.ENUM('Support', 'Supervisor', 'Admin'),
-      defaultValue: 'Support'
+      type: DataTypes.ENUM('RegCenter'),
+      defaultValue: 'RegCenter'
     },
     status: {
       type: DataTypes.ENUM('Pending', 'Active', 'Failed'),

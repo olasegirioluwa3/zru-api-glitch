@@ -1,6 +1,5 @@
 .env
 .env.local
 app/.env
-data/*
-/data
 data
+node_modules
