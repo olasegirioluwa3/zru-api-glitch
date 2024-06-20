@@ -52,6 +52,7 @@ const initializeUserModel = (sequelize) => {
     username: {
       type: DataTypes.STRING,
       allowNull: true,
+      unique: true,
       defaultValue: '',
     },
     gender: {
@@ -69,6 +70,11 @@ const initializeUserModel = (sequelize) => {
       values: ['Pending', 'Activated', 'Blocked'],
       allowNull: true,
       defaultValue: 'Pending',
+    },
+    emailVerificationExpires: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '',
     },
     password: {
       type: DataTypes.STRING,

@@ -52,6 +52,7 @@ const initializeAdminModel = (sequelize) => {
     username: {
       type: DataTypes.STRING,
       allowNull: true,
+      unique: true,
       defaultValue: '',
     },
     gender: {
@@ -69,6 +70,11 @@ const initializeAdminModel = (sequelize) => {
       values: ['Pending', 'Activated', 'Blocked'],
       allowNull: true,
       defaultValue: 'Pending',
+    },
+    emailVerificationExpires: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '',
     },
     password: {
       type: DataTypes.STRING,
@@ -135,6 +141,10 @@ const initializeAdminModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: '',
+    },
+    role: {
+      type: DataTypes.ENUM('admin', 'server', 'rumble'),
+      defaultValue: 'admin'
     },
     createdAt: {
       allowNull: false,

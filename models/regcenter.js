@@ -57,8 +57,8 @@ const initializeRegCenterModel = (sequelize) => {
     centerslug: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: '',
       unique: true,
+      defaultValue: '',
     },
     gender: {
       type: DataTypes.STRING,
@@ -75,6 +75,11 @@ const initializeRegCenterModel = (sequelize) => {
       values: ['Pending', 'Activated', 'Blocked'],
       allowNull: true,
       defaultValue: 'Pending',
+    },
+    emailVerificationExpires: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '',
     },
     password: {
       type: DataTypes.STRING,

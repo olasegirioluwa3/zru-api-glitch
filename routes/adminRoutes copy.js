@@ -1,41 +1,20 @@
 import express from 'express';
+const router = express.Router();
 import authenticateToken from '../middlewares/auth.user.middleware.js';
 import adminController from '../controllers/adminController.js';
 
-const router = express.Router();
-
 export default function adminRoutes(app, io, sequelize) {
-  // Welcome route
+  
+  // Table management routes
   router.get('/', async (req, res) => {
     try {
-      res.status(200).json({ status: "success", message: 'Welcome to RumbleGate' });
+        res.status(500).json({ status: "success", message: 'Welcome to RumbleGate' });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ status: "failed", message: 'Failed to send welcome message', error: error.message });
+      res.status(500).json({ status: "failed", message: 'Failed to list tables', error: error.message });
     }
   });
 
-  router.post('/auth/send-login-verification', async (req, res) => {
-    console.log("api/admin/rumblegate/auth/send-login-verification");
-    try {
-      await adminController.sendLoginVerificationEmail(req, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ status: "failed", message: 'Failed to send login verification email', error: error.message });
-    }
-  });
-
-  router.post('/auth/login-with-token', async (req, res) => {
-    console.log("api/admin/rumblegate/auth/login-with-token");
-    try {
-      await adminController.loginWithToken(req, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ status: "failed", message: 'Failed to login with token', error: error.message });
-    }
-  });
-
-  // List all tables
   router.get('/tables', async (req, res) => {
     console.log("api/admin/rumblegate/tables get all tables");
     try {
@@ -46,7 +25,6 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // List all tables with counts
   router.get('/tables/counts', async (req, res) => {
     console.log("api/admin/rumblegate/tables get all tables and counts");
     try {
@@ -57,8 +35,7 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // Create a new table
-  router.post('/tables/create', async (req, res) => {
+  router.post('/tables/create', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/tables/create !caution creates new table");
     try {
       await adminController.createTable(req, res);
@@ -68,17 +45,6 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  router.delete('/tables/:table', async (req, res) => {
-    console.log(`api/admin/rumblegate/tables/:${req.params.table} delete table`);
-    try {
-      await adminController.deleteTable(req, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ status: "failed", message: `Failed to delete table ${req.params.table}`, error: error.message });
-    }
-  });
-
-  // List items in a table
   router.get('/:table', async (req, res) => {
     console.log("api/admin/rumblegate/:table get a table rows");
     try {
@@ -89,7 +55,6 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // View a specific item in a table
   router.get('/:table/:id', async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id get a row from a table");
     try {
@@ -100,7 +65,6 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // Edit a specific item in a table
   router.put('/:table/:id', async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id update a row on table");
     try {
@@ -111,7 +75,6 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // Delete a specific item in a table
   router.delete('/:table/:id', async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id delete a row from a table");
     try {
@@ -122,16 +85,15 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  // Add a record to a table
-  router.post('/:table', async (req, res) => {
-    console.log(`api/admin/rumblegate/:${req.params.tableName} add a record to a table`);
-    try {
-      await adminController.addTableItem(req, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ status: "failed", message: `Failed to add item in ${req.params.table}`, error: error.message });
-    }
-  });
+    router.post('/:table', async (req, res) => {
+        console.log("api/admin/rumblegate/:table add a record to a table");
+        try {
+            await adminController.addTableItem(req, res);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ status: "failed", message: `Failed to delete item in ${req.params.table}`, error: error.message });
+        }
+    });
 
-  app.use('/api/admin/rumblegate', router);
+    app.use('/api/admin/rumblegate', router);
 }
