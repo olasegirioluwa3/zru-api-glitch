@@ -77,34 +77,33 @@ async function loginWithToken(req, res) {
     const { email, token } = req.body;
   
     try {
-      const admin = await Admin.findOne({
-        where: {
-          email,
-          role: 'admin',
-          emailVerificationToken: token,
-          emailVerificationExpires: { [Op.gt]: Date.now() }
+        const admin = await Admin.findOne({
+            where: {
+            email,
+            role: 'admin',
+            emailVerificationToken: token,
+            emailVerificationExpires: { [Op.gt]: Date.now() }
+            }
+        });
+    
+        if (!admin) {
+            return res.status(400).json({ error: 'Invalid token or token has expired' });
         }
-      });
-  
-      if (!admin) {
-        return res.status(400).json({ error: 'Invalid token or token has expired' });
-      }
-  
-    //   const authToken = jwt.sign({ id: user.id, role: user.role }, 'your-secret-key', { expiresIn: '1h' });
-      const authToken = jwt.sign(
-        { id: admin.id, role: admin.role },
-        process.env.APP_SECRET_KEY,
-        { expiresIn: "24h" }
-      );
-      
-      admin.emailVerificationToken = '';
-      admin.emailVerificationExpires = '';
-      await admin.save();
-  
-      return res.status(200).json({ message: 'Login successful', token: authToken, user: { id: admin.id, email, role: admin.role }});
+    
+        const authToken = jwt.sign(
+            { id: admin.id, role: admin.role },
+            process.env.APP_SECRET_KEY,
+            { expiresIn: "24h" }
+        );
+        
+        admin.emailVerificationToken = '';
+        admin.emailVerificationExpires = '';
+        await admin.save();
+    
+        return res.status(200).json({ message: 'Login successful', token: authToken, user: { id: admin.id, email, role: admin.role }});
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: `Error logging in: ${error.message}` });
+        console.error(error);
+        return res.status(500).json({ error: `Error logging in: ${error.message}` });
     }
 }
 
@@ -258,7 +257,7 @@ async function createTable(req, res) {
 async function addTableItem(req, res) {
     const { table } = req.params;
     const data = req.body;
-  
+    
     try {
         // Get model name from table name
         const modelName = getModelNameFromTableName(table);

@@ -124,7 +124,7 @@ export default function adminRoutes(app, io, sequelize) {
 
   // Add a record to a table
   router.post('/:table', async (req, res) => {
-    console.log(`api/admin/rumblegate/:${req.params.tableName} add a record to a table`);
+    console.log(`api/admin/rumblegate/:${req.params.table} add a record to a table`);
     try {
       await adminController.addTableItem(req, res);
     } catch (error) {
