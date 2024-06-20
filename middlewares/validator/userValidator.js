@@ -1,4 +1,5 @@
 async function validateUserData( input ) {
+  console.log(input);
   const { email, password, phoneNumber, firstName, middleName, lastName, username, gender, emailVerificationToken, resetPasswordToken } = input;
   const errors = [];
   const data = {};
@@ -81,7 +82,7 @@ async function validateUserData( input ) {
   }
 
   if (username) {
-    username = username.trim();
+    // username = username.trim();
     if (!username) {
       errors.push('Username is required');
     } else if (username.length < 3) {
@@ -126,6 +127,8 @@ async function validateUserData( input ) {
       data.resetPasswordToken = resetPasswordToken;
     }
   }
+  console.log(data)
+  console.log(errors);
   return { data, errors };
 }
 
