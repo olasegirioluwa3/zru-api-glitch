@@ -4,22 +4,20 @@ import { Model, DataTypes } from 'sequelize';
 
 class RegCenter extends Model {
   static associate(models) {
-    // define association here
+    // Define association with Transaction
+    // RegCenter.hasMany(models.Transaction, { foreignKey: 'regCenterId' });
   }
+
   static async emailExist(email) {
     const regcenter = await RegCenter.findOne({
-      where: {
-        email: email
-      }
+      where: { email }
     });
     return !!regcenter;
-    // return this.status === 'Blocked';
   }
 }
 
 const initializeRegCenterModel = (sequelize) => {
   RegCenter.init({
-    // ...
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -45,16 +43,14 @@ const initializeRegCenterModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: true
-      }
+      validate: { isEmail: true }
     },
-    centername: {
+    centerName: {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: '',
     },
-    centerslug: {
+    centerSlug: {
       type: DataTypes.STRING,
       allowNull: true,
       unique: true,
@@ -71,10 +67,9 @@ const initializeRegCenterModel = (sequelize) => {
       defaultValue: '',
     },
     emailVerificationStatus: {
-      type: DataTypes.ENUM,
-      values: ['Pending', 'Activated', 'Blocked'],
+      type: DataTypes.ENUM('pending', 'activated', 'blocked'),
       allowNull: true,
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
     },
     emailVerificationExpires: {
       type: DataTypes.STRING,
@@ -95,6 +90,11 @@ const initializeRegCenterModel = (sequelize) => {
       allowNull: true,
       defaultValue: '',
     },
+    accountStatus: {
+      type: DataTypes.ENUM('pending', 'in-review', 'activated', 'blocked'), // accountStatus with blocked can not be given any access
+      allowNull: true,
+      defaultValue: 'pending',
+    },
     profilePicture: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -108,9 +108,7 @@ const initializeRegCenterModel = (sequelize) => {
     dateOfBirth: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      validate: {
-        isDate: true
-      }
+      validate: { isDate: true }
     },
     phoneNumber: {
       type: DataTypes.STRING,
@@ -147,6 +145,16 @@ const initializeRegCenterModel = (sequelize) => {
       allowNull: true,
       defaultValue: '',
     },
+    bankName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: '',
+    },
+    bankAccountNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: '',
+    },
     createdAt: {
       allowNull: false,
       type: DataTypes.DATE
@@ -161,5 +169,4 @@ const initializeRegCenterModel = (sequelize) => {
   });
   return RegCenter;
 };
-
 export default initializeRegCenterModel;

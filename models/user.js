@@ -67,9 +67,9 @@ const initializeUserModel = (sequelize) => {
     },
     emailVerificationStatus: {
       type: DataTypes.ENUM,
-      values: ['Pending', 'Activated', 'Blocked'],
+      values: ['pending', 'activated', 'blocked'],
       allowNull: true,
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
     },
     emailVerificationExpires: {
       type: DataTypes.STRING,
@@ -89,6 +89,11 @@ const initializeUserModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: '',
+    },
+    accountStatus: {
+      type: DataTypes.ENUM('pending', 'in-review', 'activated', 'blocked'),
+      allowNull: true,
+      defaultValue: 'activated',
     },
     profilePicture: {
       type: DataTypes.STRING,
@@ -141,6 +146,11 @@ const initializeUserModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: '',
+    },
+    regCenterId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
     },
     createdAt: {
       allowNull: false,

@@ -9,15 +9,15 @@ class PaymentType extends Model {
   }
 
   isAccepted() {
-    return this.applicationStatus === 'Pending';
+    return this.applicationStatus === 'pending';
   }
 
   isRejected() {
-    return this.applicationStatus === 'Removed';
+    return this.applicationStatus === 'removed';
   }
 
   isProcessing() {
-    return this.applicationStatus === 'Active';
+    return this.applicationStatus === 'active';
   }
 }
 
@@ -54,8 +54,8 @@ const initializePaymentTypeModel = (sequelize, DataTypes) => {
       defaultValue: 'NGN'
     },
     ptStatus: {
-      type: DataTypes.ENUM('Pending', 'Removed', 'Active'),
-      defaultValue: 'Pending'
+      type: DataTypes.ENUM('pending', 'removed', 'active'),
+      defaultValue: 'pending'
     },
     courseLevel: {
       type: DataTypes.STRING,

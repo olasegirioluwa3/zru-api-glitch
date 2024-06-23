@@ -7,10 +7,10 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import cors from 'cors';
 import { createServer } from 'http';
-import userRoutes from './routes/userRoutes.js';
+import userRoutes from './routes/user/userAuthRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
-import userAccessRoutes from './routes/userAccessRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
+import adminRoutes from './routes/admin/adminAuthRoutes.js';
+import regCenterRoutes from './routes/regcenter/regCenterAuthRoutes.js';
 import db from './models/index.js';
 const sequelize = db.sequelize;
 
@@ -28,12 +28,9 @@ app.use('/uploads', express.static("public/uploads"));
 // app.use('/profileimgs', express.static("public/profileimgs"));
 
 userRoutes(app, null, sequelize);
-// whatsappRoutes(app, null, sequelize);
 paymentRoutes(app, null, sequelize);
-// serviceRoutes(app, null, sequelize);
-// serviceAccessRoutes(app, null, sequelize);
-userAccessRoutes(app, null, sequelize);
 adminRoutes(app, null, sequelize);
+regCenterRoutes(app, null, sequelize);
 
 app.get('/', (req, res) => {
   return res.status(201).json({ message: 'Welcome to ZionAI API. Hi' });

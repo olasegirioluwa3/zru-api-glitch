@@ -51,8 +51,8 @@ const initializeStudentAdmissionTestResultModel = (sequelize, DataTypes) => {
         allowNull: true,
       },
       verificationStatus: {
-        type: DataTypes.ENUM('Pending', 'Verified', 'Rejected', 'Processing'),
-        defaultValue: 'Pending'
+        type: DataTypes.ENUM('pending', 'verified', 'rejected', 'in-review'),
+        defaultValue: 'pending'
       },
       createdAt: {
         allowNull: false,

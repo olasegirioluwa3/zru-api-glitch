@@ -1,5 +1,4 @@
 'use strict';
-
 import { Model, DataTypes } from 'sequelize';
 
 class StaffApplication extends Model {
@@ -61,8 +60,8 @@ const initializeStaffApplicationModel = (sequelize, DataTypes) => {
           allowNull: true,
         },
         applicationStatus: {
-          type: DataTypes.ENUM('Pending', 'Accepted', 'Rejected', 'Processing'),
-          defaultValue: 'Pending'
+          type: DataTypes.ENUM('pending', 'accepted', 'rejected', 'processing'),
+          defaultValue: 'pending'
         },
         createdAt: {
           allowNull: false,

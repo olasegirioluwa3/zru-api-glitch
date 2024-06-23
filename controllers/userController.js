@@ -5,6 +5,7 @@ import { Sequelize } from 'sequelize';
 import db from '../models/index.js';
 const sequelize = db.sequelize;
 const User = sequelize.models.user;
+const RegCenter = sequelize.models.regcenter;
 import validateUserData from "../middlewares/validator/userValidator.js";
 import email from "../utils/email.js";
 const { sendEmail } = email;
@@ -14,9 +15,16 @@ const generateToken = () => {
   return crypto.randomBytes(20).toString("hex");
 };
 
-// module.exports = () => {
 async function registerUser(req, res, data) {
   try {
+    if (data.centerSlug && data.centerSlug !== ''){
+      const regcenter = await RegCenter.findOne({ where: {centerSlug: data.centerSlug}});
+      if (!regcenter){
+        return res.status(401).json({ message: "Registration Center looks invalid, try again" });
+      } else {
+        data.regCenterId = regcenter.id;
+      }
+    }
     const hashedPassword = await bcrypt.hash(data.password, 10); // Hash password with a cost factor of 10
     data.password = hashedPassword;
     const token = generateToken();
@@ -34,7 +42,7 @@ async function registerUser(req, res, data) {
   } catch (error) {
     console.error(error.message);
     if (error instanceof Sequelize.UniqueConstraintError) {
-      res.status(400).json({ message: "Email already exists" });
+      res.status(400).json({ message: "Email or Username already exists" });
     } else {
       res.status(500).json({ message: "Registration failed on C" });
     }
@@ -47,7 +55,7 @@ async function loginUser(req, res, data) {
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ message: "Record not found" });
-    } else if (user.emailVerificationStatus !== "Activated") {
+    } else if (user.emailVerificationStatus !== "activated") {
       return res.status(401).json({
         message:
           "Account not activated! Please, check your email for verification link",
@@ -59,7 +67,7 @@ async function loginUser(req, res, data) {
     }
     const token = jwt.sign(
       { userId: user.id, userRole: user.role },
-      process.env.APP_JWT_SECRET_KEY,
+      process.env.APP_SECRET_KEY,
       { expiresIn: "24h" }
     );
     res.status(200).json({ token, user: { id: user.id, email, role: "user" } });
@@ -239,7 +247,7 @@ async function verifyAccountEmail(req, res, data) {
       return res.status(401).json({ message: "Invalid reset token" });
     }
     user.emailVerificationToken = "";
-    user.emailVerificationStatus = "Activated";
+    user.emailVerificationStatus = "activated";
     const link = `${domain}/login`;
     const emailText = `Account verified successfully, click on the following link to login: ${link}`;
     if (
@@ -297,7 +305,7 @@ async function resetPasswordFinal(req, res, data) {
     user.resetPasswordToken = "";
     user.resetPasswordExpires = "";
     user.emailVerificationToken = "";
-    user.emailVerificationStatus = "Activated";
+    user.emailVerificationStatus = "activated";
     const link = `${domain}/account/signin`;
     const emailText = `Reset password successfully, click on the following link to login: ${link}`;
     if (await sendEmail(user.email, "Reset Password Successfully", emailText)) {

@@ -58,8 +58,8 @@ const initializeApplicationModel = (sequelize, DataTypes) => {
       defaultValue: ''
     },
     applicationStatus: {
-      type: DataTypes.ENUM('Pending', 'Accepted', 'Rejected', 'Processing'),
-      defaultValue: 'Pending'
+      type: DataTypes.ENUM('pending', 'accepted', 'rejected', 'processing', 'declined'),
+      defaultValue: 'pending'
     },
     createdAt: {
       allowNull: false,

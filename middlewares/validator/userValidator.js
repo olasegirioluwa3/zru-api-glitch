@@ -1,6 +1,6 @@
 async function validateUserData( input ) {
   console.log(input);
-  const { email, password, phoneNumber, firstName, middleName, lastName, username, gender, emailVerificationToken, resetPasswordToken } = input;
+  const { email, password, phoneNumber, firstName, middleName, lastName, username, gender, emailVerificationToken, resetPasswordToken, centerSlug, country, state, bankName, bankAccountNumber } = input;
   const errors = [];
   const data = {};
 
@@ -26,17 +26,12 @@ async function validateUserData( input ) {
   }
 
   if (phoneNumber) {
-    // Remove non-numeric characters (adjust for specific regions if needed)
     const sanitizedNumber = phoneNumber.replace(/\D/g, '');
-  
-    // Minimum length check (adjust based on expected formats)
     if (sanitizedNumber.length < 10) {
       errors.push('Phone number seems too short');
     } else if (sanitizedNumber.length > 15) {
       errors.push('Phone number seems too long');
     } else {
-      // Optional: Implement region-specific validation using libraries
-      // (e.g., `phone-number` or `google-libphonenumber`)
       data.phoneNumber = sanitizedNumber;
     }
   }
@@ -127,6 +122,66 @@ async function validateUserData( input ) {
       data.resetPasswordToken = resetPasswordToken;
     }
   }
+
+  if (centerSlug) {
+    if (!centerSlug) {
+      errors.push('Center Slug is required');
+    } else if (centerSlug.length < 1) {
+      errors.push('Center Slug must be at least 1 characters long');
+    } else if (centerSlug !== centerSlug.toLowerCase()) {
+      errors.push('Center Slug must be all lowercase');
+    } else {
+      data.centerSlug = centerSlug;
+    }
+  }
+
+  if (country) {
+    if (!country) {
+      errors.push('Country is required');
+    } else if (country.length < 1) {
+      errors.push('Country must be at least 1 characters long');
+    } else if (country !== country.toLowerCase()) {
+      errors.push('Country must be all lowercase');
+    } else {
+      data.country = country;
+    }
+  }
+
+  if (state) {
+    if (!state) {
+      errors.push('State is required');
+    } else if (state.length < 1) {
+      errors.push('State must be at least 1 characters long');
+    } else if (state !== state.toLowerCase()) {
+      errors.push('State must be all lowercase');
+    } else {
+      data.state = state;
+    }
+  }
+
+  if (bankName) {
+    if (!bankName) {
+      errors.push('Bank Name is required');
+    } else if (bankName.length < 1) {
+      errors.push('Bank Name must be at least 1 characters long');
+    } else if (bankName !== bankName.toLowerCase()) {
+      errors.push('Bank Name must be all lowercase');
+    } else {
+      data.bankName = bankName;
+    }
+  }
+
+  if (bankAccountNumber) {
+    const sanitizedNumber = bankAccountNumber.replace(/\D/g, '');
+    if (sanitizedNumber.length < 8) {
+      errors.push('Bank Account Number seems too short');
+    } else if (sanitizedNumber.length > 15) {
+      errors.push('Bank Account Number seems too long');
+    } else {
+      data.bankAccountNumber = sanitizedNumber;
+    }
+  }
+
   console.log(data)
   console.log(errors);
   return { data, errors };

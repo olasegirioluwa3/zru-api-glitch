@@ -1,20 +1,21 @@
 import express from 'express';
 const router = express.Router();
-import authenticateToken from '../middlewares/auth.user.middleware.js';
-import uploads from '../middlewares/upload.user.middleware.js';
+import authenticateToken from '../../middlewares/auth.user.middleware.js';
+import uploads from '../../middlewares/upload.user.middleware.js';
 const { uploadProfilePicture, deleteExistingProfilePicture, uploadCoverPicture, deleteExistingCoverPicture } = uploads;
 import phoneNumber from 'phone-number';
-import userController from '../controllers/userController.js';
-import validateUserData from "../middlewares/validator/userValidator.js";
+import userController from '../../controllers/userController.js';
+import validateUserData from "../../middlewares/validator/userValidator.js";
 
-export default function userRoutes (app, io, sequelize) {
-  
-  // Registration (handled by userController)
+  /**
+   * user auth routes
+   */
+
+export default function userAuthRoutes (app, io, sequelize) {
   router.post('/register', async (req, res) => {
     try {
       console.log("api/users/register");
       const { data, errors } = await validateUserData( req.body );
-      console.log("starting");
       if (errors.length > 0) {
         return res.status(400).json({ errors });
       }

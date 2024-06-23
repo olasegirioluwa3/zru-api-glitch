@@ -1,12 +1,12 @@
 import express from 'express';
-import authenticateToken from '../middlewares/auth.user.middleware.js';
-import adminController from '../controllers/adminController.js';
+import authenticateToken from '../../middlewares/auth.user.middleware.js';
+import adminController from '../../controllers/adminController.js';
 
 const router = express.Router();
 
-export default function adminRoutes(app, io, sequelize) {
+export default function adminAuthRoutes(app, io, sequelize) {
   // Welcome route
-  router.get('/', async (req, res) => {
+  router.get('/', authenticateToken, async (req, res) => {
     try {
       res.status(200).json({ status: "success", message: 'Welcome to RumbleGate' });
     } catch (error) {
@@ -36,7 +36,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // List all tables
-  router.get('/tables', async (req, res) => {
+  router.get('/tables', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/tables get all tables");
     try {
       await adminController.listTables(req, res);
@@ -47,7 +47,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // List all tables with counts
-  router.get('/tables/counts', async (req, res) => {
+  router.get('/tables/counts', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/tables get all tables and counts");
     try {
       await adminController.listTablesWithCounts(req, res);
@@ -58,7 +58,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // Create a new table
-  router.post('/tables/create', async (req, res) => {
+  router.post('/tables/create', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/tables/create !caution creates new table");
     try {
       await adminController.createTable(req, res);
@@ -68,7 +68,7 @@ export default function adminRoutes(app, io, sequelize) {
     }
   });
 
-  router.delete('/tables/:table', async (req, res) => {
+  router.delete('/tables/:table', authenticateToken, async (req, res) => {
     console.log(`api/admin/rumblegate/tables/:${req.params.table} delete table`);
     try {
       await adminController.deleteTable(req, res);
@@ -79,7 +79,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // List items in a table
-  router.get('/:table', async (req, res) => {
+  router.get('/:table', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/:table get a table rows");
     try {
       await adminController.listTableItems(req, res);
@@ -90,7 +90,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // View a specific item in a table
-  router.get('/:table/:id', async (req, res) => {
+  router.get('/:table/:id', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id get a row from a table");
     try {
       await adminController.viewTableItem(req, res);
@@ -101,7 +101,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // Edit a specific item in a table
-  router.put('/:table/:id', async (req, res) => {
+  router.put('/:table/:id', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id update a row on table");
     try {
       await adminController.editTableItem(req, res);
@@ -112,7 +112,7 @@ export default function adminRoutes(app, io, sequelize) {
   });
 
   // Delete a specific item in a table
-  router.delete('/:table/:id', async (req, res) => {
+  router.delete('/:table/:id', authenticateToken, async (req, res) => {
     console.log("api/admin/rumblegate/:table/:id delete a row from a table");
     try {
       await adminController.deleteTableItem(req, res);

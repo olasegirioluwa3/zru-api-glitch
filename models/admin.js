@@ -67,9 +67,9 @@ const initializeAdminModel = (sequelize) => {
     },
     emailVerificationStatus: {
       type: DataTypes.ENUM,
-      values: ['Pending', 'Activated', 'Blocked'],
+      values: ['pending', 'activated', 'blocked'],
       allowNull: true,
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
     },
     emailVerificationExpires: {
       type: DataTypes.STRING,
