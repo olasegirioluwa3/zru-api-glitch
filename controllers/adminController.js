@@ -1,13 +1,10 @@
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import { Op } from 'sequelize';
-import { Sequelize } from 'sequelize';
-import db from '../models/index.js';
-const sequelize = db.sequelize;
-const Admin = sequelize.models.admin;
-// import validateUserData from "../middlewares/validator/userValidator.js";
 import email from "../utils/email.js";
 const { sendEmail } = email;
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import mongoose from 'mongoose';
+import Admin from '../models/admin.js'; // Adjust the path as per your project structure
 const domain = process.env.APP_WEBSITE_URL || "localhost:3000";
 
 const generateToken = () => {
@@ -40,37 +37,63 @@ function getModelNameFromTableName(tableName) {
     return null;
 }
 
-async function sendLoginVerificationEmail(req, res) {
-    const { email } = req.body;
-    try {
-        const admin = await Admin.findOne({ where: { email, role: 'admin'||'server'||'rumble' } });
-        if (!admin) {
-            return res.status(404).json({ error: 'Admin with this email not found' });
-        }
-    
-        const token = generateToken();
-        const tokenExpiry = Date.now() + 3600000; // Token expires in 1 hour
-    
-        admin.emailVerificationToken = token;
-        admin.emailVerificationExpires = tokenExpiry;
-        
-        const verifyLink = `${domain}/admin/rumblegate/email-verify/${token}`;
-        const emailText = `You are receiving this because you (or someone else) have requested the login for your account.\n\n` +
-          `Please use the following token to login:\n\n` +
-          `${token}\n\n` +
-          `If you did not request this, please ignore this email.\n, click on the following link: ${verifyLink}`;
-        
-        if (await admin.save()) {
-            await sendEmail(admin.email, `Login Verification Token expires by ${tokenExpiry}`, emailText);
-            return res.status(201).json({ message: "Verification token sent to email" });
-        } else {
-            return res.status(401).json({ message: "Registration failed, try again" });
-        }
+async function registerAdmin(req, res, data) {
+  try {
+    const hashedPassword = await bcrypt.hash(data.password, 10); // Hash password with a cost factor of 10
+    data.password = hashedPassword;
+    const token = generateToken();
+    data.emailVerificationToken = token;
 
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: `Error sending verification email: ${error.message}` });
+    const verifyLink = `${domain}/account/email-verify/${token}`;
+    const emailText = `To verify your account email, click on the following link: ${verifyLink}`;
+
+    const newAdmin = new Admin(data);
+    await newAdmin.save();
+
+    await sendEmail(data.email, "Activate your account", emailText);
+
+    res.status(201).json({ message: "Registration successful" });
+  } catch (error) {
+    console.error(error.message);
+    if (error.code === 11000) {
+      res.status(400).json({ message: "Email or Username already exists" });
+    } else {
+      res.status(500).json({ message: "Registration failed", error: error });
     }
+  }
+}
+
+async function sendLoginVerificationEmail(req, res) {
+  const { email } = req.body;
+  try {
+    const admin = await Admin.findOne({ email, role: { $in: ['admin', 'server', 'rumble'] } });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin with this email not found' });
+    }
+
+    const token = generateToken();
+    const tokenExpiry = Date.now() + 3600000; // Token expires in 1 hour
+
+    admin.emailVerificationToken = token;
+    admin.emailVerificationExpires = tokenExpiry;
+
+    const verifyLink = `${domain}/admin/rumblegate/email-verify/${token}`;
+    const emailText = `You are receiving this because you (or someone else) have requested the login for your account.\n\n` +
+      `Please use the following token to login:\n\n` +
+      `${token}\n\n` +
+      `If you did not request this, please ignore this email.\n, click on the following link: ${verifyLink}`;
+
+    if (await admin.save()) {
+      await sendEmail(admin.email, `Login Verification Token expires by ${tokenExpiry}`, emailText);
+      return res.status(201).json({ message: "Verification token sent to email" });
+    } else {
+      return res.status(401).json({ message: "Registration failed, try again" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: `Error sending verification email: ${error.message}` });
+  }
 }
 
 async function loginWithToken(req, res) {
@@ -78,12 +101,10 @@ async function loginWithToken(req, res) {
   
     try {
         const admin = await Admin.findOne({
-            where: {
-            email,
-            role: 'admin',
-            emailVerificationToken: token,
-            emailVerificationExpires: { [Op.gt]: Date.now() }
-            }
+          email,
+          role: 'admin',
+          emailVerificationToken: token,
+          emailVerificationExpires: { $gt: Date.now() }
         });
     
         if (!admin) {
@@ -93,7 +114,7 @@ async function loginWithToken(req, res) {
         const authToken = jwt.sign(
             { id: admin.id, role: admin.role },
             process.env.APP_SECRET_KEY,
-            { expiresIn: "24h" }
+            { expiresIn: "100h" }
         );
         
         admin.emailVerificationToken = '';
@@ -304,6 +325,7 @@ async function deleteTable(req, res) {
 const adminController = {
     sendLoginVerificationEmail,
     loginWithToken,
+    registerAdmin,
     listTables,
     listTablesWithCounts,
     listTableItems,

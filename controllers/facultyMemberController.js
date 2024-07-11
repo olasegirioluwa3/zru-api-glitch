@@ -1,17 +1,39 @@
-import { FacultyMember } from '../models';
+import FacultyDepartment from '../models/facultydepartment.js';
+import FacultyMember from '../models/facultymember.js';
+import User from '../models/user.js';
 
-export const addFacultyMember = async (req, res) => {
+const addDepartmentMember = async (req, res) => {
   try {
-    const facultyMember = await FacultyMember.create(req.body);
+    const { userId, departmentId } = req.body;
+    const department = await FacultyDepartment.findById(departmentId);
+    if (!department) {
+      return res.status(401).json({ message: "Unknown Department" });
+    }
+    console.log(department);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Unknown user" });
+    }
+    console.log(user);
+    
+    const memberExist = await FacultyMember.findOne({ userId });
+    if (memberExist) {
+      return res.status(401).json({ message: "User is already a member" });
+    }
+    console.log(memberExist);
+    
+    const facultyMember = new FacultyMember(req.body);
+    await facultyMember.save();
     res.status(201).send(facultyMember);
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const getFacultyMemberById = async (req, res) => {
+const getDepartmentMemberById = async (req, res) => {
   try {
-    const facultyMember = await FacultyMember.findByPk(req.params.id);
+    const facultyMember = await FacultyMember.findById(req.params.id);
     if (!facultyMember) {
       return res.status(404).send();
     }
@@ -21,9 +43,9 @@ export const getFacultyMemberById = async (req, res) => {
   }
 };
 
-export const updateFacultyMember = async (req, res) => {
+const updateDepartmentMember = async (req, res) => {
   try {
-    const facultyMember = await FacultyMember.findByPk(req.params.id);
+    const facultyMember = await FacultyMember.findById(req.params.id);
     if (!facultyMember) {
       return res.status(404).send();
     }
@@ -35,24 +57,49 @@ export const updateFacultyMember = async (req, res) => {
   }
 };
 
-export const removeFacultyMember = async (req, res) => {
+const removeDepartmentMember = async (req, res) => {
   try {
-    const facultyMember = await FacultyMember.findByPk(req.params.id);
+    const facultyMember = await FacultyMember.findById(req.params.id);
     if (!facultyMember) {
       return res.status(404).send();
     }
-    await facultyMember.destroy();
+    await facultyMember.remove();
     res.send(facultyMember);
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const listMembersForFaculty = async (req, res) => {
+const listAllDepartmentMember = async (req, res) => {
   try {
-    const members = await FacultyMember.findAll({ where: { facultyId: req.params.facultyId } });
+    const members = await FacultyMember.find({});
     res.send(members);
   } catch (error) {
     res.status(400).send(error);
   }
 };
+
+const listMembersForDepartment = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const department = await FacultyDepartment.findById(departmentId);
+    if (!department) {
+      return res.status(401).json({ message: "Unknown department" });
+    }
+    const members = await FacultyMember.find({ departmentId });
+    return res.send(members);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+const facultyMemberController = {
+    addDepartmentMember,
+    getDepartmentMemberById,
+    updateDepartmentMember,
+    removeDepartmentMember,
+    listAllDepartmentMember,
+    listMembersForDepartment
+};
+
+export default facultyMemberController;

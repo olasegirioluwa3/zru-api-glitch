@@ -1,72 +1,62 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-
-class Credential extends Model {
-  // Define associations for Credential.
-  static associate(models) {
-      this.belongsTo(models.user, { foreignKey: 'userId' });
+const credentialSchema = new mongoose.Schema({
+  userId: {  // Foreign key to User model
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  credentialName: {
+    type: String,
+    required: true,
+  },
+  credentialDetails: {
+    type: String,
+    default: '',
+  },
+  credentialFiles: {
+    type: String,
+    default: '',
+  },
+  credentialStatus: {
+    type: String,
+    enum: ['uploaded', 'verified', 'rejected'],
+    default: 'uploaded'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   }
-
-  isAccepted() {
-      return this.credentialStatus === 'Uploaded';
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
   }
+});
 
-  isVerified() {
-      return this.credentialStatus === 'Verified';
-  }
-
-  isProcessing() {
-      return this.credentialStatus === 'Rejected';
-  }
-}
-
-const initializeCredentialModel = (sequelize, DataTypes) => {
-    Credential.init({
-        id: {
-          allowNull: false,
-          type: DataTypes.INTEGER,
-          autoIncrement: true,
-          primaryKey: true,
-        },
-        userId: {  // Foreign key to User model
-          type: DataTypes.INTEGER,
-          references: {
-            model: 'users',  // table name 
-            key: 'id'
-          },
-          allowNull: false
-        },
-        credentialName: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        credentialDetails: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        credentialFiles: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        credentialStatus: {
-          type: DataTypes.ENUM('Uploaded', 'Verified', 'Rejected'),
-          defaultValue: 'Uploaded'
-        },
-        createdAt: {
-          allowNull: false,
-          type: DataTypes.DATE,
-        },
-        updatedAt: {
-          allowNull: true,
-          type: DataTypes.DATE,
-        }
-    }, {
-        sequelize,
-        modelName: 'credential',
-    });
-    
-    return Credential;
+// Define instance methods
+credentialSchema.methods.isAccepted = function() {
+  return this.credentialStatus === 'uploaded';
 };
 
-export default initializeCredentialModel;
+credentialSchema.methods.isVerified = function() {
+  return this.credentialStatus === 'verified';
+};
+
+credentialSchema.methods.isProcessing = function() {
+  return this.credentialStatus === 'rejected';
+};
+
+const Credential = mongoose.model('Credential', credentialSchema);
+
+export default Credential;

@@ -1,82 +1,76 @@
-'use strict';
-import { Model, DataTypes } from 'sequelize';
+import mongoose from 'mongoose';
 
-class StaffApplication extends Model {
-  // Define associations for Application.
-  static associate(models) {
-      this.belongsTo(models.user, { foreignKey: 'userId' });
+const staffApplicationSchema = new mongoose.Schema({
+  userId: {  // Foreign key to User model
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  jobTitle: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return v.trim() !== '';
+      },
+      message: props => `${props.value} is empty!`
+    }
+  },
+  jobPosition: {
+    type: String,
+    default: '',
+  },
+  CV: {
+    type: String,
+    default: '',
+  },
+  coverLetter: {
+    type: String,
+    default: '',
+  },
+  applicationDetails: {
+    type: String,
+    default: '',
+  },
+  applicationStatus: {
+    type: String,
+    enum: ['pending', 'accepted', 'rejected', 'processing'],
+    default: 'pending'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   }
-
-  isAccepted() {
-      return this.applicationStatus === 'Accepted';
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
   }
+});
 
-  isRejected() {
-      return this.applicationStatus === 'Rejected';
-  }
-
-  isProcessing() {
-      return this.applicationStatus === 'Processing';
-  }
-}
-
-const initializeStaffApplicationModel = (sequelize, DataTypes) => {
-    StaffApplication.init({
-        id: {
-          allowNull: false,
-          type: DataTypes.INTEGER,
-          autoIncrement: true,
-          primaryKey: true,
-        },
-        userId: {  // Foreign key to User model
-          type: DataTypes.INTEGER,
-          references: {
-            model: 'users',  // table name 
-            key: 'id'
-          },
-          allowNull: false
-        },
-        jobTitle: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true
-          }
-        },
-        jobPosition: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-        CV: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-        coverLetter: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-        applicationDetails: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        applicationStatus: {
-          type: DataTypes.ENUM('pending', 'accepted', 'rejected', 'processing'),
-          defaultValue: 'pending'
-        },
-        createdAt: {
-          allowNull: false,
-          type: DataTypes.DATE,
-        },
-        updatedAt: {
-          allowNull: true,
-          type: DataTypes.DATE,
-        }
-    }, {
-        sequelize,
-        modelName: 'staffapplication',
-    });
-    
-    return StaffApplication;
+// Define instance methods
+staffApplicationSchema.methods.isAccepted = function() {
+  return this.applicationStatus === 'accepted';
 };
 
-export default initializeStaffApplicationModel;
+staffApplicationSchema.methods.isRejected = function() {
+  return this.applicationStatus === 'rejected';
+};
+
+staffApplicationSchema.methods.isProcessing = function() {
+  return this.applicationStatus === 'processing';
+};
+
+const StaffApplication = mongoose.model('StaffApplication', staffApplicationSchema);
+
+export default StaffApplication;

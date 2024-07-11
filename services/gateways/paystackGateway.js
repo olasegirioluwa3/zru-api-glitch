@@ -11,9 +11,7 @@ class PaystackGateway extends PaymentGateway {
 
     async initiatePayment(amount, currency, data, callbackUrl) {
         try {
-            // Convert amount to kobo (or smallest currency unit)
             const koboAmount = amount * 100;
-            console.log(data);
             const response = await axios({
                 url: `${this.paystackUrl}/transaction/initialize`,
                 method: 'POST',
@@ -31,9 +29,6 @@ class PaystackGateway extends PaymentGateway {
             });
             return response.data;
         } catch (error) {
-            // logged error
-            // throw new Error(`Failed to initialize Paystack payment: ${error}`);
-
             return null;
         }
     }

@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
-import RegCenter from "../models/regcenter.js"; // Adjust path based on your project structure
+import Admin from '../models/admin.js';
 
-const authRegCenterMiddleware = async (req, res, next) => {
+const authenticateToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    return res.status(401).send({ status: 'failed', message: 'Authorization token not provided!' });
+    return res.status(401).send({ status: "failed", message: 'Authorization token not provided!' });
   }
 
   try {
@@ -16,19 +16,18 @@ const authRegCenterMiddleware = async (req, res, next) => {
         }
         return res.status(500).send({ status: 'failed', message: 'Failed to verify token', error: error.message });
       }
-
       req.tmpuser = {
         id: decodedToken.id,
+        role: 'admin',
       };
 
       try {
-        const regCenter = await RegCenter.findById(req.tmpuser.id); // Assuming findById or similar method
-        if (!regCenter) {
-          throw new Error('RegCenter not found');
-        }
+        const admin = await Admin.findById({ _id: req.tmpuser.id, accountStatus: "active" });
         req.tmpuser = null;
-        req.user = regCenter;
-        req.user.role = "regcenter";
+        if (!admin) {
+          throw new Error('Admin not found');
+        }
+        req.user = admin;
         next(); // Continue to the next middleware or route handler
       } catch (error) {
         console.error(error);
@@ -41,4 +40,4 @@ const authRegCenterMiddleware = async (req, res, next) => {
   }
 };
 
-export default authRegCenterMiddleware;
+export default authenticateToken;

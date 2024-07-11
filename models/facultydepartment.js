@@ -1,32 +1,34 @@
 import mongoose from 'mongoose';
 
-const courseSchema = new mongoose.Schema({
-  programId: {
+const facultyDepartmentSchema = new mongoose.Schema({
+  facultyId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'FacultyProgram',
+    ref: 'Faculty',
     required: true,
   },
-  courseCode: {
+  departmentName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  departmentCode: {
+    type: String,
+    unique: true,
+    default: '',
+  },
+  departmentCourse: {
     type: String,
     default: '',
   },
-  courseTitle: {
+  degreeType: {
     type: String,
     default: '',
   },
-  courseCredit: {
+  departmentDetails: {
     type: String,
     default: '',
   },
-  courseHour: {
-    type: String,
-    default: '',
-  },
-  courseDetails: {
-    type: String,
-    default: '',
-  },
-  courseStatus: {
+  departmentStatus: {
     type: String,
     enum: ['pending', 'in-review', 'active', 'removed'],
     default: 'pending',
@@ -43,6 +45,6 @@ const courseSchema = new mongoose.Schema({
   }
 });
 
-const Course = mongoose.model('Course', courseSchema);
+const FacultyDepartment = mongoose.model('FacultyDepartment', facultyDepartmentSchema);
 
-export default Course;
+export default FacultyDepartment;

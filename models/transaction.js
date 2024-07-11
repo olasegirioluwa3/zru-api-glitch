@@ -1,65 +1,43 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const { Schema } = mongoose;
 
-class Transaction extends Model {
-  static associate(models) {
-    // Associate Transaction with RegCenter
-    // Transaction.belongsTo(models.RegCenter, { foreignKey: 'regCenterId' });
-  }
-}
+const transactionSchema = new Schema({
+  amount: {
+    type: Number,
+    required: true,
+    default: 0.0,
+  },
+  transactionType: {
+    type: String,
+    enum: ['undetermined', 'credit', 'debit'],
+    required: true,
+    default: 'undetermined',
+  },
+  regCenterId: {
+    type: Schema.Types.ObjectId,
+    ref: 'RegCenter',  // Reference to RegCenter model
+    required: true,
+  },
+  applicationId: {
+    type: Number,
+    default: 0,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'declined'],
+    default: 'pending',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const initializeTransactionModel = (sequelize) => {
-  Transaction.init({
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    amount: {
-      type: DataTypes.DECIMAL,
-      allowNull: false,
-      defaultValue: 0.0
-    },
-    transactionType: {
-      type: DataTypes.ENUM('undetermined', 'credit', 'debit'),
-      allowNull: false,
-      defaultValue: "undetermined",
-    },
-    regCenterId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
-    },
-    applicationId: {
-      type: DataTypes.INTEGER,
-      allowNull: true, // Nullable for non-application-related transactions
-      defaultValue: 0,
-    },
-    status: {
-      type: DataTypes.ENUM('pending', 'approved', 'declined'),
-      allowNull: true,
-      defaultValue: 'pending',
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    }
-  }, {
-    sequelize,
-    modelName: 'transaction',
-    tableName: 'transactions',
-    timestamps: true,
-  });
+const Transaction = mongoose.model('Transaction', transactionSchema);
 
-  return Transaction;
-};
-
-export default initializeTransactionModel;
+export default Transaction;

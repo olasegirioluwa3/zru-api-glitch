@@ -1,14 +1,14 @@
+import email from "../utils/email.js";
+const { sendEmail } = email;
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { Sequelize } from 'sequelize';
-import db from '../models/index.js';
-const sequelize = db.sequelize;
-const User = sequelize.models.user;
-const RegCenter = sequelize.models.regcenter;
+import User from "../models/user.js"; // Adjust path based on your project structure
+import RegCenter from "../models/regcenter.js"; // Adjust path based on your project structure
 import validateUserData from "../middlewares/validator/userValidator.js";
-import email from "../utils/email.js";
-const { sendEmail } = email;
+import dotenv from "dotenv";
+dotenv.config();
+
 const domain = process.env.APP_WEBSITE_URL || "localhost:3000";
 
 const generateToken = () => {
@@ -17,12 +17,12 @@ const generateToken = () => {
 
 async function registerUser(req, res, data) {
   try {
-    if (data.centerSlug && data.centerSlug !== ''){
-      const regcenter = await RegCenter.findOne({ where: {centerSlug: data.centerSlug}});
-      if (!regcenter){
+    if (data.centerSlug && data.centerSlug !== '') {
+      const regcenter = await RegCenter.findOne({ centerSlug: data.centerSlug });
+      if (!regcenter) {
         return res.status(401).json({ message: "Registration Center looks invalid, try again" });
       } else {
-        data.regCenterId = regcenter.id;
+        data.regCenterId = regcenter._id;
       }
     }
     const hashedPassword = await bcrypt.hash(data.password, 10); // Hash password with a cost factor of 10
@@ -32,19 +32,19 @@ async function registerUser(req, res, data) {
 
     const verifyLink = `${domain}/account/email-verify/${token}`;
     const emailText = `To verify your account email, click on the following link: ${verifyLink}`;
+
     const newUser = new User(data);
-    if (await newUser.save(data)) {
-      await sendEmail(data.email, "Activate your account", emailText);
-      res.status(201).json({ message: "Registration successful" });
-    } else {
-      res.status(401).json({ message: "Registration failed, try again" });
-    }
+    await newUser.save();
+
+    await sendEmail(data.email, "Activate your account", emailText);
+
+    res.status(201).json({ message: "Registration successful" });
   } catch (error) {
     console.error(error.message);
-    if (error instanceof Sequelize.UniqueConstraintError) {
+    if (error.code === 11000) {
       res.status(400).json({ message: "Email or Username already exists" });
     } else {
-      res.status(500).json({ message: "Registration failed on C" });
+      res.status(500).json({ message: "Registration failed", error: error });
     }
   }
 }
@@ -52,25 +52,28 @@ async function registerUser(req, res, data) {
 async function loginUser(req, res, data) {
   try {
     const { email, password } = data;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(401).json({ message: "Record not found" });
     } else if (user.emailVerificationStatus !== "activated") {
       return res.status(401).json({
-        message:
-          "Account not activated! Please, check your email for verification link",
+        message: "Account not activated! Please, check your email for verification link",
       });
     }
+
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid Password" });
     }
+
     const token = jwt.sign(
-      { userId: user.id, userRole: user.role },
+      { id: user._id, userRole: user.role },
       process.env.APP_SECRET_KEY,
-      { expiresIn: "24h" }
+      { expiresIn: "100h" }
     );
-    res.status(200).json({ token, user: { id: user.id, email, role: "user" } });
+
+    res.status(200).json({ token, user: { id: user._id, email, role: "user" } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -79,20 +82,13 @@ async function loginUser(req, res, data) {
 
 async function getProfile(req, res) {
   try {
-    // Extract user ID from the authenticated token
-    const userId = req.user.userId; // Assuming 'req.user' is populated by authentication middleware
+    const userId = req.user.userId;
 
-    // Fetch user data based on ID
-    const user = await User.findByPk(userId, {
-      attributes: { exclude: ["password"] }, // Exclude password for security
-    });
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // Consider including related entities (e.g., applications, posts)
-    // Use appropriate joins or eager loading based on your data model
 
     res.status(200).json({ user });
   } catch (error) {
@@ -103,106 +99,75 @@ async function getProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const userId = req.user.userId; // Extract ID from authenticated user
-    const { firstName, lastName, bio } = req.body; // Update fields
+    const userId = req.user.userId;
+    const { firstName, lastName, bio } = req.body;
 
-    // Implement validation for update data (optional)
-
-    const user = await User.findByPk(userId);
+    const user = await User.findByIdAndUpdate(userId, { firstName, lastName, bio });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.bio = bio;
-
-    await user.save(); // Save updated user data
-
     res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {
     console.error(error);
-    // Handle potential validation errors or database errors
     res.status(500).json({ message: "Failed to update profile" });
   }
 }
 
 async function updateProfilePicture(req, res) {
   try {
-    const userId = req.user.userId; // Extract ID from authenticated user
-
-    // Assuming 'uploadProfilePicture' middleware handles file upload and stores the path in req.file
+    const userId = req.user.userId;
 
     if (!req.file) {
       return res.status(400).json({ message: "No profile picture uploaded" });
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByIdAndUpdate(userId, { profilePicture: req.file.path });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.profilePicture = req.file.path; // Update profile picture path
-
-    await user.save(); // Save updated user data
-
     res.status(200).json({ message: "Profile picture updated successfully" });
   } catch (error) {
     console.error(error);
-    // Handle potential errors during file upload or database update
     res.status(500).json({ message: "Failed to update profile picture" });
   }
 }
 
 async function updateCoverPicture(req, res) {
   try {
-    const userId = req.user.userId; // Extract ID from authenticated user
-
-    // Assuming 'uploadCoverPicture' middleware handles file upload and stores the path in req.file
+    const userId = req.user.userId;
 
     if (!req.file) {
       return res.status(400).json({ message: "No cover picture uploaded" });
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByIdAndUpdate(userId, { coverPicture: req.file.path });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.coverPicture = req.file.path; // Update cover picture path
-
-    await user.save(); // Save updated user data
-
     res.status(200).json({ message: "Cover picture updated successfully" });
   } catch (error) {
     console.error(error);
-    // Handle potential errors during file upload or database update
     res.status(500).json({ message: "Failed to update cover picture" });
   }
 }
 
 async function getUserByUsername(req, res) {
   try {
-    const username = req.params.username; // Extract username from request path
+    const username = req.params.username;
 
-    // Implement access control logic here (consider privacy settings)
-    // This might involve checking if the requesting user can view other user profiles
-
-    const user = await User.findOne({
-      where: { username },
-      exclude: { password },
-    });
+    const user = await User.findOne({ username }).select("username");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Consider including only public user information (exclude sensitive data)
-
-    res.status(200).json({ user: { username: user.username } });
+    res.status(200).json({ user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch user profile" });
@@ -212,54 +177,56 @@ async function getUserByUsername(req, res) {
 async function forgotPassword(req, res, data) {
   try {
     const { email } = data;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid email address" }); // Avoid revealing if user exists for security
+      return res.status(400).json({ message: "Invalid email address" });
     }
+
     const token = generateToken();
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
+
     const resetLink = `${domain}/account/new-password/${token}`;
     const emailText = `To reset your password, click on the following link: ${resetLink}`;
-    if (await sendEmail(email, "Password Reset", emailText)) {
-      await user.save();
-      res.status(200).send({
-        status: "success",
-        message: "Password reset link sent successfully!",
-      });
-    }
+
+    await user.save();
+
+    await sendEmail(email, "Password Reset", emailText);
+
+    res.status(200).send({
+      status: "success",
+      message: "Password reset link sent successfully!",
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Failed to send password reset instructions" });
+    res.status(500).json({ message: "Failed to send password reset instructions" });
   }
 }
 
 async function verifyAccountEmail(req, res, data) {
   try {
     const { emailVerificationToken } = data;
-    const user = await User.findOne({
-      where: { emailVerificationToken: emailVerificationToken },
-    });
+    const user = await User.findOneAndUpdate(
+      { emailVerificationToken },
+      { $set: { emailVerificationToken: "", emailVerificationStatus: "activated" } },
+      { new: true }
+    );
+
     if (!user) {
       return res.status(401).json({ message: "Invalid reset token" });
     }
-    user.emailVerificationToken = "";
-    user.emailVerificationStatus = "activated";
+
     const link = `${domain}/login`;
     const emailText = `Account verified successfully, click on the following link to login: ${link}`;
-    if (
-      await sendEmail(user.email, "Account verified successfully", emailText)
-    ) {
-      await user.save();
-      res.status(200).json({
-        status: "success",
-        message: "Account email verified successfully, proceed to login",
-        user,
-      });
-    }
+
+    await sendEmail(user.email, "Account verified successfully", emailText);
+
+    res.status(200).json({
+      status: "success",
+      message: "Account email verified successfully, proceed to login",
+      user,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to reset password" });
@@ -269,12 +236,12 @@ async function verifyAccountEmail(req, res, data) {
 async function resetPasswordInit(req, res, data) {
   try {
     const { resetPasswordToken } = data;
-    const user = await User.findOne({
-      where: { resetPasswordToken: resetPasswordToken },
-    });
+    const user = await User.findOne({ resetPasswordToken });
+
     if (!user) {
       return res.status(401).json({ message: "Invalid reset token" });
     }
+
     res.status(200).json({
       status: "success",
       message: "Reset Email Token is Valid",
@@ -289,33 +256,37 @@ async function resetPasswordInit(req, res, data) {
 async function resetPasswordFinal(req, res, data) {
   try {
     const { resetPasswordToken, password } = data;
-    const user = await User.findOne({
-      where: { resetPasswordToken: resetPasswordToken },
-    });
+    const user = await User.findOne({ resetPasswordToken });
+
     if (!user) {
       return res.status(401).json({ message: "Invalid reset token" });
     }
+
     if (user.resetPasswordExpires && user.resetPasswordExpires < Date.now()) {
       return res
         .status(401)
         .json({ message: "Reset token has expired! Please, try again." });
     }
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash new password
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
     user.resetPasswordToken = "";
     user.resetPasswordExpires = "";
     user.emailVerificationToken = "";
     user.emailVerificationStatus = "activated";
+
     const link = `${domain}/account/signin`;
     const emailText = `Reset password successfully, click on the following link to login: ${link}`;
-    if (await sendEmail(user.email, "Reset Password Successfully", emailText)) {
-      await user.save();
-      res.status(200).json({
-        status: "success",
-        message: "Password reset was successful",
-        email: user.email,
-      });
-    }
+
+    await sendEmail(user.email, "Reset Password Successfully", emailText);
+
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Password reset was successful",
+      email: user.email,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to reset password" });
@@ -324,26 +295,25 @@ async function resetPasswordFinal(req, res, data) {
 
 async function resetPassword(req, res) {
   try {
-    const userId = req.user.userId; // Extract ID from authenticated user
+    const userId = req.user.userId;
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findByPk(userId);
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Validate current password
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid current password" });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10); // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
-    await user.save(); // Save updated user data
+    await user.save();
 
     res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
@@ -354,34 +324,27 @@ async function resetPassword(req, res) {
 
 async function verifyResetToken(token) {
   try {
-    const decodedToken = jwt.verify(token, process.env.RESET_TOKEN_SECRET); // Decode using a secret
+    const decodedToken = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
 
-    // Check for expiry
     const issuedAt = decodedToken.iat;
     const expirationTime = 60 * 60 * 24; // 24 hours in seconds
     const isExpired = Date.now() / 1000 > issuedAt + expirationTime;
 
     if (isExpired) {
-      return false; // Reject expired tokens
+      return false;
     }
 
-    // Validate user ID consistency
     const userId = decodedToken.userId;
-    const user = await User.findByPk(userId);
+    const user = await User.findById(userId);
 
     if (!user) {
-      return false; // Reject tokens for non-existent users
+      return false;
     }
 
-    // Optionally check for a used token
-    // if (user.resetTokenUsedAt && user.resetTokenUsedAt > issuedAt) {
-    //   return false; // Reject already used tokens
-    // }
-
-    return true; // Token is valid
+    return true;
   } catch (error) {
     console.error("Invalid token:", error);
-    return false; // Reject invalid tokens
+    return false;
   }
 }
 

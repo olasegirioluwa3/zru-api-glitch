@@ -1,172 +1,145 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const regCenterSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  lastName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  middleName: {
+    type: String,
+    default: '',
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return /\S+@\S+\.\S+/.test(v); // Basic email validation
+      },
+      message: props => `${props.value} is not a valid email address!`,
+    },
+  },
+  centerName: {
+    type: String,
+    default: '',
+  },
+  centerSlug: {
+    type: String,
+    unique: true,
+    default: '',
+  },
+  gender: {
+    type: String,
+    default: '',
+  },
+  emailVerificationToken: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  emailVerificationStatus: {
+    type: String,
+    enum: ['pending', 'activated', 'blocked'],
+    default: 'pending',
+  },
+  emailVerificationExpires: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  resetPasswordToken: {
+    type: String,
+    default: '',
+  },
+  resetPasswordExpires: {
+    type: String,
+    default: '',
+  },
+  accountStatus: {
+    type: String,
+    enum: ['pending', 'in-review', 'activated', 'blocked'],
+    default: 'pending',
+  },
+  profilePicture: {
+    type: String,
+    default: '',
+  },
+  coverPicture: {
+    type: String,
+    default: '',
+  },
+  dateOfBirth: {
+    type: Date,
+    validate: {
+      validator: function(v) {
+        return v instanceof Date && !isNaN(v);
+      },
+      message: props => `${props.value} is not a valid date!`,
+    },
+  },
+  phoneNumber: {
+    type: String,
+    default: '',
+  },
+  address: {
+    type: String,
+    default: '',
+  },
+  country: {
+    type: String,
+    default: '',
+  },
+  state: {
+    type: String,
+    default: '',
+  },
+  city: {
+    type: String,
+    default: '',
+  },
+  localGovernment: {
+    type: String,
+    default: '',
+  },
+  zipCode: {
+    type: String,
+    default: '',
+  },
+  bankName: {
+    type: String,
+    default: '',
+  },
+  bankAccountNumber: {
+    type: String,
+    default: '',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: null,
+  },
+});
 
-class RegCenter extends Model {
-  static associate(models) {
-    // Define association with Transaction
-    // RegCenter.hasMany(models.Transaction, { foreignKey: 'regCenterId' });
-  }
-
-  static async emailExist(email) {
-    const regcenter = await RegCenter.findOne({
-      where: { email }
-    });
-    return !!regcenter;
-  }
-}
-
-const initializeRegCenterModel = (sequelize) => {
-  RegCenter.init({
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    firstName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    lastName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    middleName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: { isEmail: true }
-    },
-    centerName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    centerSlug: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-      defaultValue: '',
-    },
-    gender: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    emailVerificationToken: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    emailVerificationStatus: {
-      type: DataTypes.ENUM('pending', 'activated', 'blocked'),
-      allowNull: true,
-      defaultValue: 'pending',
-    },
-    emailVerificationExpires: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    resetPasswordToken: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    resetPasswordExpires: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    accountStatus: {
-      type: DataTypes.ENUM('pending', 'in-review', 'activated', 'blocked'), // accountStatus with blocked can not be given any access
-      allowNull: true,
-      defaultValue: 'pending',
-    },
-    profilePicture: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    coverPicture: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    dateOfBirth: {
-      type: DataTypes.DATEONLY,
-      allowNull: true,
-      validate: { isDate: true }
-    },
-    phoneNumber: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    address: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: '',
-    },
-    country: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    state: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    city: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    localGovernment: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    zipCode: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    bankName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    bankAccountNumber: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'regcenter',
-  });
-  return RegCenter;
+// Adding methods to the schema
+regCenterSchema.statics.emailExist = async function(email) {
+  const regcenter = await this.findOne({ email });
+  return !!regcenter;
 };
-export default initializeRegCenterModel;
+
+const RegCenter = mongoose.model('RegCenter', regCenterSchema);
+
+export default RegCenter;

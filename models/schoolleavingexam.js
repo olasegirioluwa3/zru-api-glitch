@@ -1,57 +1,36 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const { Schema } = mongoose;
 
-// ... rest of your code
-class SchoolLeavingExam extends Model {
-  // ...
-  static associate(models) {
-    // define association here
-  }
-}
+const schoolLeavingExamSchema = new Schema({
+  sleName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  sleValue: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  sleDesc: {
+    type: String,
+    default: '',
+  },
+  sleRegion: {
+    type: String,
+    default: '',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const initializeSchoolLeavingExamModel = (sequelize, DataTypes) => {
-  SchoolLeavingExam.init({
-    // ...
-    sle_id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    sle_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    sle_value: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    sle_desc: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    sle_region: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'schoolleavingexam',
-  });
-  return SchoolLeavingExam;
-};
+const SchoolLeavingExam = mongoose.model('SchoolLeavingExam', schoolLeavingExamSchema);
 
-export default initializeSchoolLeavingExamModel;
+export default SchoolLeavingExam;

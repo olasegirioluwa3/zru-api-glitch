@@ -1,62 +1,42 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-
-class CourseAllocation extends Model {
-  // Define associations for CourseAllocation.
-  static associate(models) {
-    this.belongsTo(models.course, { foreignKey: 'courseId' });
+const courseAllocationSchema = new mongoose.Schema({
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: true,
+  },
+  programId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FacultyProgram',
+    required: true,
+  },
+  level: {
+    type: String,
+    enum: ['100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'],
+    default: '100',
+  },
+  semester: {
+    type: String,
+    enum: ['first', 'second', 'third', 'fourth'],
+    default: 'first',
+  },
+  allocationDetails: {
+    type: String,
+    default: '',
   }
-}
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
+  }
+});
 
-const initializeCourseAllocationModel = (sequelize, DataTypes) => {
-  CourseAllocation.init({
-    caId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    courseId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'courses',
-        key: 'courseId',
-      },
-    },
-    programId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'facultyprograms',
-        key: 'programId',
-      },
-    },
-    level: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '100'
-    },  
-    semester: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE,
-    }
-  },{
-    sequelize,
-    modelName: 'courseallocation',
-  });
+const CourseAllocation = mongoose.model('CourseAllocation', courseAllocationSchema);
 
-  return CourseAllocation;
-};
-
-export default initializeCourseAllocationModel;
+export default CourseAllocation;

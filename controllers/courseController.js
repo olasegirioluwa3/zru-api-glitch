@@ -1,19 +1,30 @@
-import { Course } from '../models';
+import Course from '../models/course.js'; // Make sure to replace with the correct path to your Course model
+import FacultyProgram from '../models/facultyprogram.js'; // Make sure to replace with the correct path to your FacultyProgram model
 
-export const createCourse = async (req, res) => {
+const createCourse = async (req, res) => {
   try {
-    const course = await Course.create(req.body);
+    const { programId, courseCode } = req.body;
+    const program = await FacultyProgram.findById(programId);
+    if (!program) {
+      return res.status(401).json({ message: "Unknown program" });
+    }
+    const courseExist = await Course.findOne({ courseCode, programId });
+    if (courseExist) {
+      return res.status(401).json({ message: "Course with the course code already created for the program" });
+    }
+    const course = new Course(req.body);
+    await course.save();
     res.status(201).send(course);
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const getCourseById = async (req, res) => {
+const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findById(req.params.id);
     if (!course) {
-      return res.status(404).send();
+      return res.status(404).send({ message: 'Course not found' });
     }
     res.send(course);
   } catch (error) {
@@ -21,9 +32,22 @@ export const getCourseById = async (req, res) => {
   }
 };
 
-export const updateCourse = async (req, res) => {
+const getActiveCourseById = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const { id } = req.params;
+    const course = await Course.findOne({ _id: id, courseStatus: "active" });
+    if (!course) {
+      return res.status(404).send({ message: 'Course not found' });
+    }
+    res.send(course);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+const updateCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
     if (!course) {
       return res.status(404).send();
     }
@@ -35,24 +59,49 @@ export const updateCourse = async (req, res) => {
   }
 };
 
-export const deleteCourse = async (req, res) => {
+const deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findByIdAndDelete(req.params.id);
     if (!course) {
-      return res.status(404).send();
+      return res.status(404).send({ message: 'Course not found' });
     }
-    await course.destroy();
-    res.send(course);
+    return res.status(200).send({ message: 'Course deleted successfully', course });
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const listCoursesForProgram = async (req, res) => {
+const listCoursesForProgram = async (req, res) => {
   try {
-    const courses = await Course.findAll({ where: { programId: req.params.programId } });
+    const courses = await Course.find({ programId: req.params.programId });
     res.send(courses);
   } catch (error) {
     res.status(400).send(error);
   }
 };
+
+const listActiveCoursesForProgram = async (req, res) => {
+  try {
+    const { programId } = req.params;
+    const departmentProgram = await FacultyProgram.find({ _id: programId, programStatus: "active" });
+    if (!departmentProgram) {
+      return res.status(404).send({ message: 'Program not found' });
+    }
+    const courses = await Course.find({ programId: programId, courseStatus: "active" });
+    res.send(courses);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+const courseController = {
+  createCourse,
+  getCourseById,
+  getActiveCourseById,
+  updateCourse,
+  deleteCourse,
+  listCoursesForProgram,
+  listActiveCoursesForProgram
+};
+
+export default courseController;

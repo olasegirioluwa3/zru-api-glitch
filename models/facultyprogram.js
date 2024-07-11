@@ -1,84 +1,59 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const { Schema } = mongoose;
 
-class FacultyProgram extends Model {
-  static associate(models) {
-    // Define associations here
-    this.belongsTo(models.faculty, { foreignKey: 'facultyId' });
+const facultyProgramSchema = new Schema({
+  departmentId: {
+    type: Schema.Types.ObjectId,
+    ref: 'FacultyDepartment',
+    required: true,
+  },
+  programName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  programCode: {
+    type: String,
+    default: '',
+  },
+  programCourse: {
+    type: String,
+    default: '',
+  },
+  degreeType: {
+    type: String,
+    default: '',
+  },
+  programDetails: {
+    type: String,
+    default: '',
+  },
+  programStatus: {
+    type: String,
+    enum: ['pending', 'in-review', 'active', 'removed'],
+    default: 'pending',
+  },
+  programDuration: {
+    type: String,
+    default: '',
+  },
+  graduationRequirements: {
+    type: String,
+    default: '',
+  },
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
   }
-}
+});
 
-const initializeFacultyProgramModel = (sequelize, DataTypes) => {
-  FacultyProgram.init({
-    programId: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    facultyId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'faculties', // Reference the 'faculties' table
-        key: 'facultyId',
-      },
-    },
-    programName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    programCode: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    programCourse: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    degreeType: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    programDetails: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: ''
-    },
-    programStatus: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
-    },
-    programDuration: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: ''
-    },
-    graduationRequirements: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: ''
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'facultyprogram',
-    timestamps: false, // Disable timestamps (createdAt and updatedAt)
-  });
+const FacultyProgram = mongoose.model('FacultyProgram', facultyProgramSchema);
 
-  return FacultyProgram;
-};
-
-export default initializeFacultyProgramModel;
+export default FacultyProgram;

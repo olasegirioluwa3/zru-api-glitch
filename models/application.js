@@ -1,80 +1,73 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-
-class Application extends Model {
-  // Define associations for Application.
-  static associate(models) {
-    // this.belongsTo(models.user, { foreignKey: 'userId' });
-  }
-
-  isAccepted() {
-    return this.applicationStatus === 'Accepted';
-  }
-
-  isRejected() {
-    return this.applicationStatus === 'Rejected';
-  }
-
-  isProcessing() {
-    return this.applicationStatus === 'Processing';
-  }
-}
-
-const initializeApplicationModel = (sequelize, DataTypes) => {
-  Application.init({
-    // Application fields go here
-    id: {
-      allowNull: false,
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    userId: {  // Foreign key to User model
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
-    },
-    programId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,  // Make programId optional
-      defaultValue: 0
-    },
-    courseName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true
-      }
-    },
-    entryType: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    applicationDetails: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: ''
-    },
-    applicationStatus: {
-      type: DataTypes.ENUM('pending', 'accepted', 'rejected', 'processing', 'declined'),
-      defaultValue: 'pending'
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE,
+const applicationSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  programId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FacultyProgram',
+    required: true,
+    default: null,
+  },
+  courseName: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return v && v.length > 0;
+      },
+      message: props => `${props.value} is not a valid course name!`
     }
-  }, {
-    sequelize,
-    modelName: 'application',
-  });
+  },
+  entryType: {
+    type: String,
+    default: '',
+  },
+  applicationDetails: {  // Keep log of actions of this application timestamp - event
+    type: String,
+    default: '',
+  },
+  applicationStatus: {
+    type: String,
+    enum: ['pending', 'in-review', 'accepted', 'rejected', 'completed', 'isstudent'], // complete means the acceptance fee has been paid
+    default: 'pending',
+  }
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
+  }
+});
 
-  return Application;
+// Application status methods
+applicationSchema.methods.isPending = function() {
+  return this.applicationStatus === 'pending';
 };
 
-export default initializeApplicationModel;
+applicationSchema.methods.isProcessing = function() {
+  return this.applicationStatus === 'processing';
+};
+
+applicationSchema.methods.isAccepted = function() {
+  return this.applicationStatus === 'accepted';
+};
+
+applicationSchema.methods.isRejected = function() {
+  return this.applicationStatus === 'rejected';
+};
+
+applicationSchema.methods.isCompleted = function() {
+  return this.applicationStatus === 'completed';
+};
+
+const Application = mongoose.model('Application', applicationSchema);
+
+export default Application;

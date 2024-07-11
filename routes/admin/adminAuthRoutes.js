@@ -1,7 +1,8 @@
 import express from 'express';
-import authenticateToken from '../../middlewares/auth.user.middleware.js';
+import mongoose from 'mongoose';
+import authenticateToken from '../../middlewares/auth.admin.middleware.js';
 import adminController from '../../controllers/adminController.js';
-
+import validateUserData from "../../middlewares/validator/userValidator.js";
 const router = express.Router();
 
 export default function adminAuthRoutes(app, io, sequelize) {
@@ -12,6 +13,20 @@ export default function adminAuthRoutes(app, io, sequelize) {
     } catch (error) {
       console.error(error);
       res.status(500).json({ status: "failed", message: 'Failed to send welcome message', error: error.message });
+    }
+  });
+
+  router.post('/register', async (req, res) => {
+    try {
+      console.log("api/users/register");
+      const { data, errors } = await validateUserData( req.body );
+      if (errors.length > 0) {
+        return res.status(400).json({ errors });
+      }
+      await adminController.registerAdmin(req, res, data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ status: "failed", message: 'Register failed on R', error: error.message });
     }
   });
 
@@ -36,7 +51,7 @@ export default function adminAuthRoutes(app, io, sequelize) {
   });
 
   // List all tables
-  router.get('/tables', authenticateToken, async (req, res) => {
+  router.get('/tables', async (req, res) => {
     console.log("api/admin/rumblegate/tables get all tables");
     try {
       await adminController.listTables(req, res);

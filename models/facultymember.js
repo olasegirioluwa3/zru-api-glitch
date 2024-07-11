@@ -1,76 +1,59 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-
-class FacultyMember extends Model {
-  static associate(models) {
-    // Define associations here
-    this.belongsTo(models.faculty, { foreignKey: 'facultyId' });
-    this.belongsTo(models.user, { foreignKey: 'userId' });
+const facultyMemberSchema = new mongoose.Schema({
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FacultyDepartment',
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+  },
+  memberName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  designation: {
+    type: String,
+    default: '',
+  },
+  researchInterests: {
+    type: String,
+    default: '',
+  },
+  membershipDetail: {
+    type: String,
+    default: '',
+  },
+  membershipStatus: {
+    type: String,
+    enum: ['pending', 'current', 'past', 'other'],
+    default: 'pending',
+  },
+  startDateAt: {
+    type: Date,
+    default: null,
+  },
+  endDateAt: {
+    type: Date,
+    default: null,
+  },
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
   }
-}
+});
 
-const initializeFacultyMemberModel = (sequelize, DataTypes) => {
-  FacultyMember.init({
-    memberId: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    facultyId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'faculties', // Reference the 'faculties' table
-        key: 'facultyId',
-      },
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
-    },
-    memberName: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    designation: {
-      type: DataTypes.STRING(100),
-    },
-    researchInterests: {
-      type: DataTypes.TEXT,
-    },
-    membershipStatus: {
-      type: DataTypes.ENUM('Pending','Current', 'Past', 'Other'), // Add other status values as needed
-      defaultValue: 'Current',
-    },
-    startDateAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    },
-    endDateAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'facultymember',
-    timestamps: false, // Disable timestamps (createdAt and updatedAt)
-  });
+const FacultyMember = mongoose.model('FacultyMember', facultyMemberSchema);
 
-  return FacultyMember;
-};
-
-export default initializeFacultyMemberModel;
+export default FacultyMember;

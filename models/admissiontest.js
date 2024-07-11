@@ -1,61 +1,32 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-
-// ... rest of your code
-class AdmissionTest extends Model {
-  // ...
-  static associate(models) {
-    // define association here
+const admissionTestSchema = new mongoose.Schema({
+  atName: {
+    type: String,
+    required: true,
+    default: ''
+  },
+  atValue: {
+    type: String,
+    required: true,
+    default: ''
+  },
+  atDesc: {
+    type: String,
+    default: ''
+  },
+  atEntryLevel: {
+    type: String,
+    default: '100'
+  },
+  atRegion: {
+    type: String,
+    default: ''
   }
-}
+}, {
+  timestamps: true
+});
 
-const initializeAdmissionTestModel = (sequelize, DataTypes) => {
-  AdmissionTest.init({
-    at_id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    at_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    at_value: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    at_desc: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    at_entry_level: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '100',
-    },
-    at_region: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'admissiontest',
-  });
-  return AdmissionTest;
-};
+const AdmissionTest = mongoose.model('AdmissionTest', admissionTestSchema);
 
-export default initializeAdmissionTestModel;
+export default AdmissionTest;

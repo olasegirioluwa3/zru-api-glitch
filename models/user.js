@@ -1,170 +1,131 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const userSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  lastName: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  middleName: {
+    type: String,
+    default: '',
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return /\S+@\S+\.\S+/.test(v);
+      },
+      message: props => `${props.value} is not a valid email!`,
+    },
+  },
+  username: {
+    type: String,
+    unique: true,
+    default: '',
+  },
+  gender: {
+    type: String,
+    default: '',
+  },
+  emailVerificationToken: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  emailVerificationStatus: {
+    type: String,
+    enum: ['pending', 'activated', 'blocked'],
+    default: 'pending',
+  },
+  emailVerificationExpires: {
+    type: Date,
+    required: false,
+    default: Date.now,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  resetPasswordToken: {
+    type: String,
+    default: '',
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null,
+  },
+  accountStatus: {
+    type: String,
+    enum: ['pending', 'in-review', 'active', 'blocked'],
+    default: 'active',
+  },
+  profilePicture: {
+    type: String,
+    default: '',
+  },
+  coverPicture: {
+    type: String,
+    default: '',
+  },
+  dateOfBirth: {
+    type: Date,
+    validate: {
+      validator: function(v) {
+        return v instanceof Date && !isNaN(v);
+      },
+      message: props => `${props.value} is not a valid date of birth!`,
+    },
+  },
+  phoneNumber: {
+    type: String,
+    default: '',
+  },
+  address: {
+    type: String,
+    default: '',
+  },
+  country: {
+    type: String,
+    default: '',
+  },
+  state: {
+    type: String,
+    default: '',
+  },
+  city: {
+    type: String,
+    default: '',
+  },
+  localGovernment: {
+    type: String,
+    default: '',
+  },
+  zipCode: {
+    type: String,
+    default: '',
+  },
+  regCenterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RegCenter',
+    default: null,
+  },
+}, {
+  timestamps: true,
+});
 
-class User extends Model {
-  static associate(models) {
-    // define association here
-  }
-  static async emailExist(email) {
-    const user = await User.findOne({
-      where: {
-        email: email
-      }
-    });
-    return !!user;
-    // return this.status === 'Blocked';
-  }
-}
-
-const initializeUserModel = (sequelize) => {
-  User.init({
-    // ...
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    firstName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    lastName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    middleName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true
-      }
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-      defaultValue: '',
-    },
-    gender: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    emailVerificationToken: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    emailVerificationStatus: {
-      type: DataTypes.ENUM,
-      values: ['pending', 'activated', 'blocked'],
-      allowNull: true,
-      defaultValue: 'pending',
-    },
-    emailVerificationExpires: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: '',
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    resetPasswordToken: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    resetPasswordExpires: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    accountStatus: {
-      type: DataTypes.ENUM('pending', 'in-review', 'activated', 'blocked'),
-      allowNull: true,
-      defaultValue: 'activated',
-    },
-    profilePicture: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    coverPicture: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    dateOfBirth: {
-      type: DataTypes.DATEONLY,
-      allowNull: true,
-      validate: {
-        isDate: true
-      }
-    },
-    phoneNumber: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    address: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: '',
-    },
-    country: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    state: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: ''
-    },
-    city: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    localGovernment: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    zipCode: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: '',
-    },
-    regCenterId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0,
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE
-    }
-  }, {
-    sequelize,
-    modelName: 'user',
-  });
-  return User;
+userSchema.statics.emailExist = async function(email) {
+  const user = await this.findOne({ email });
+  return !!user;
 };
 
-export default initializeUserModel;
+const User = mongoose.model('User', userSchema);
+
+export default User;

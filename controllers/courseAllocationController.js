@@ -1,17 +1,38 @@
-import { CourseAllocation } from '../models';
+import mongoose from 'mongoose';
+import CourseAllocation from '../models/courseallocation.js'; // Make sure to replace with the correct path to your CourseAllocation model
+import Course from '../models/course.js';
+import FacultyDepartment from '../models/facultydepartment.js';
+import FacultyProgram from '../models/facultyprogram.js';
 
-export const allocateCourse = async (req, res) => {
+const allocateCourse = async (req, res) => {
   try {
-    const courseAllocation = await CourseAllocation.create(req.body);
+    const { courseId, programId } = req.body;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Unknown course" });
+    }
+
+    const department = await FacultyProgram.findById(programId);
+    if (!department) {
+      return res.status(404).json({ message: "Unknown department" });
+    }
+
+    const courseAllocated = await CourseAllocation.findOne({ courseId: courseId, programId: programId });
+    if (courseAllocated) {
+      return res.status(401).json({ message: "Course already allocated to program" });
+    }
+
+    const courseAllocation = new CourseAllocation(req.body);
+    await courseAllocation.save();
     res.status(201).send(courseAllocation);
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const getCourseAllocationById = async (req, res) => {
+const getCourseAllocationById = async (req, res) => {
   try {
-    const courseAllocation = await CourseAllocation.findByPk(req.params.id);
+    const courseAllocation = await CourseAllocation.findById(req.params.id);
     if (!courseAllocation) {
       return res.status(404).send();
     }
@@ -21,9 +42,9 @@ export const getCourseAllocationById = async (req, res) => {
   }
 };
 
-export const updateCourseAllocation = async (req, res) => {
+const updateCourseAllocation = async (req, res) => {
   try {
-    const courseAllocation = await CourseAllocation.findByPk(req.params.id);
+    const courseAllocation = await CourseAllocation.findById(req.params.id);
     if (!courseAllocation) {
       return res.status(404).send();
     }
@@ -35,24 +56,58 @@ export const updateCourseAllocation = async (req, res) => {
   }
 };
 
-export const deleteCourseAllocation = async (req, res) => {
+const deleteCourseAllocation = async (req, res) => {
   try {
-    const courseAllocation = await CourseAllocation.findByPk(req.params.id);
+    const courseAllocation = await CourseAllocation.findByIdAndDelete(req.params.id);
     if (!courseAllocation) {
-      return res.status(404).send();
+      return res.status(404).send({ message: 'CourseAllocation not found' });
     }
-    await courseAllocation.destroy();
-    res.send(courseAllocation);
+    res.status(200).send({ message: 'courseAllocation deleted successfully', courseAllocation });
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const listCourseAllocationsForProgram = async (req, res) => {
+const listCourseAllocationsForProgram = async (req, res) => {
   try {
-    const courseAllocations = await CourseAllocation.findAll({ where: { programId: req.params.programId } });
+    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId });
     res.send(courseAllocations);
   } catch (error) {
     res.status(400).send(error);
   }
 };
+
+const listCourseAllocationsForActiveProgram = async (req, res) => {
+  try {
+    const { programId } = req.params;
+    const program = await FacultyProgram.findOne({ _id: programId, programStatus: "active" });
+    if (!program) {
+      return res.status(404).send({ message: 'Program not found' });
+    }
+    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId });
+    res.send(courseAllocations);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+const listCourseAllocations = async (req, res) => {
+  try {
+    const courseAllocations = await CourseAllocation.find();
+    res.send(courseAllocations);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+const courseAllocationController = {
+  allocateCourse,
+  getCourseAllocationById,
+  updateCourseAllocation,
+  deleteCourseAllocation,
+  listCourseAllocations,
+  listCourseAllocationsForProgram,
+  listCourseAllocationsForActiveProgram
+};
+
+export default courseAllocationController;

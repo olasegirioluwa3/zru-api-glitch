@@ -1,86 +1,90 @@
-'use strict';
+import mongoose from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
+const paymentTypeSchema = new mongoose.Schema({
+  programId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FacultyProgram',
+  },
+  ptPurpose: {
+    type: String,
+    enum: ['application', 'acceptance', 'tuition', 'tuition-combined', 'portal', 'cbt', 'laboratory', 'hostel', 'library'],
+    default: 'tuition',
+  },
+  ptAmount: {
+    type: String,
+    required: true,
+    default: '1000',
+  },
+  ptDefaultCurrency: {
+    type: String,
+    required: true,
+    default: 'NGN',
+  },
+  ptAmountInternationalStudent: {
+    type: String,
+    required: true,
+    default: '100',
+  },
+  ptDefaultCurrencyInternationalStudent: {
+    type: String,
+    required: true,
+    default: 'USD',
+  },
+  ptStatus: {
+    type: String,
+    enum: ['pending', 'removed', 'active'],
+    default: 'pending',
+  },
+  courseLevel: {
+    type: String,
+    required: true,
+    default: 'none',
+  },
+  courseSemester: {
+    type: String,
+    required: true,
+    default: 'none',
+  },
+  ptSubscription: {
+    type: String,
+    enum: ['no', 'yes'],
+    default: 'no',
+  },
+  ptSubscriptionFrequency: {
+    type: String,
+    enum: ['', 'monthly', 'dayly', 'weekly', 'yearly'],
+    default: '',
+  },
+  ptDetails: {
+    type: String,
+    required: true,
+    default: '',
+  },
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    getters: true,
+  },
+  toObject: {
+    virtuals: true,
+    getters: true,
+  },
+});
 
-class PaymentType extends Model {
-  // Define associations for Application.
-  static associate(models) {
-    this.belongsTo(models.facultyprogram, { foreignKey: 'programId' });
-  }
-
-  isAccepted() {
-    return this.applicationStatus === 'pending';
-  }
-
-  isRejected() {
-    return this.applicationStatus === 'removed';
-  }
-
-  isProcessing() {
-    return this.applicationStatus === 'active';
-  }
-}
-
-const initializePaymentTypeModel = (sequelize, DataTypes) => {
-  PaymentType.init({
-    ptId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    programId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'facultyprograms',
-        key: 'programId',
-      },
-      defaultValue: 0
-    },
-    ptPurpose: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    ptAmount: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 1000
-    },
-    ptDefaultCurrency: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'NGN'
-    },
-    ptStatus: {
-      type: DataTypes.ENUM('pending', 'removed', 'active'),
-      defaultValue: 'pending'
-    },
-    courseLevel: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
-    },
-    ptDetails: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-      defaultValue: ''
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-    },
-    updatedAt: {
-      allowNull: true,
-      type: DataTypes.DATE,
-    }
-  }, {
-    sequelize,
-    modelName: 'paymenttype',
-  });
-
-  return PaymentType;
+// Adding methods to the schema
+paymentTypeSchema.methods.isAccepted = function() {
+  return this.ptStatus === 'active';
 };
 
-export default initializePaymentTypeModel;
+paymentTypeSchema.methods.isRejected = function() {
+  return this.ptStatus === 'removed';
+};
+
+paymentTypeSchema.methods.isProcessing = function() {
+  return this.ptStatus === 'pending';
+};
+
+const PaymentType = mongoose.model('PaymentType', paymentTypeSchema);
+
+export default PaymentType;

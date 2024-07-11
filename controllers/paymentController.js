@@ -1,187 +1,236 @@
-import crypto from 'crypto';
-import { Sequelize } from 'sequelize';
-import db from '../models/index.js';
-const sequelize = db.sequelize;
-import sendEmail from '../utils/email.js';
-import PaymentGateway from '../services/gateways/paymentGateway.js';
-import PaystackGateway from '../services/gateways/paystackGateway.js';
-import StripeGateway from '../services/gateways/stripeGateway.js';
+import Payment from '../models/payment.js';
+import PaymentType from '../models/paymenttype.js';
+import User from '../models/user.js';
+import useraccess from '../utils/useraccess.js';
 
-function generateToken() {
-  return crypto.randomBytes(20).toString("hex");
-}
-
-const domain = process.env.APP_WEBSITE_URL || 'localhost:3000';
-const { payment: Payment, user: User, serviceaccess: ServiceAccess, service: ServiceType } = sequelize.models;
-
-async function create(req, res, data) {
+// Create a new payment
+const createPayment = async (req, res) => {
+    const {
+        userId,
+        paymentTypeId,
+        paymentFor,
+        paymentForId,
+        amount,
+        amountPaid,
+        amountRemaining,
+        paymentStatus,
+        paymentFullfilled,
+        paymentReference,
+        paymentDate,
+        gateway,
+        currency,
+        paymentDueDate,
+        paymentNextDate,
+        quantity
+    } = req.body;
+  
     try {
-        const user = await User.findByPk(req.user.id);
-        if (!user) return res.status(400).send({ status: 'failed', error: 'Unknown user' });
+        // Check user access
+        const hasAccess = useraccess.userHaveAccess(req.user._id, userId, req.user.role);
+        if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+        
+        const payment = new Payment({
+            userId,
+            paymentTypeId,
+            paymentFor,
+            paymentForId,
+            amount,
+            amountPaid,
+            amountRemaining,
+            paymentStatus,
+            paymentFullfilled,
+            paymentReference,
+            paymentDate,
+            gateway,
+            currency,
+            paymentDueDate,
+            paymentNextDate,
+            quantity
+        });
 
-        // get cost info of the service
-        let paymentData = {};
-        const serviceaccess = await ServiceAccess.findByPk(data.saId);
-        if (serviceaccess) {
-            // get data from service
-            const service = await ServiceType.findByPk(serviceaccess.svId);
-            if (!service) {
-                return res.status(400).send({ status: 'failed', error: 'Unknown service' });
-            }
-
-            // initiate payment
-            paymentData.userId = req.user.id;
-            paymentData.email = user.email;
-            paymentData.full_name = `${user.firstName} ${user.lastName}`;
-            paymentData.saId = serviceaccess.id;
-
-            // get cost info of the service
-            paymentData.gateway = data.gateway || service.svPaymentGateway;
-            paymentData.currency = data.currency || service.svPaymentCurrency;
-
-            // Calculate price and paymentNextDate
-            let quantity = parseInt(data.quantity, 10) || 1;
-            paymentData.quantity = quantity;
-            let price = parseInt(service.svPaymentAmount, 10);
-            let paymentNextDate = new Date(serviceaccess.paymentNextDate);
-            paymentNextDate.setMonth(paymentNextDate.getMonth() + quantity);
-            price = parseInt(service.svPaymentAmount, 10) * quantity;
-
-            let paymentGateway = PaymentGateway;
-            let finalAmount;
-
-            if (paymentData.gateway === 'Paystack') {
-                paymentGateway = new PaystackGateway();
-                const decimalFee = 1.95 / 100.0;
-                const flatFee = (parseInt(price, 10) * (1.5 / 100)) + 100;
-                const capFee = 2000.0;
-                const applicableFees = (parseInt(decimalFee, 10) * parseInt(price, 10)) + parseInt(flatFee, 10);
-                finalAmount = applicableFees >= capFee ? parseInt(price, 10) + parseInt(capFee, 10) : ((parseInt(price, 10) + parseInt(flatFee, 10)) / (1 - parseInt(decimalFee, 10))) + 0.01;
-            } else if (paymentData.gateway === 'Stripe') {
-                paymentGateway = new StripeGateway();
-            } else {
-                return res.status(400).send({ status: 'failed', error: 'Invalid payment gateway' });
-            }
-
-            paymentData.amount = finalAmount;
-            const callbackUrl = process.env.PAYMENT_CALLBACK_URL || callbackURL;
-            const paymentDetails = await paymentGateway.initiatePayment(paymentData.amount, paymentData.currency, paymentData, callbackUrl);
-            if (!paymentDetails) return res.status(400).send({ status: 'failed', error: 'Try another quantity' });
-
-            // Create a payment
-            paymentData.amountPaid = '0';
-            paymentData.paymentReference = paymentDetails.data.reference;
-            paymentData.paymentNextDate = paymentNextDate;
-            console.log(paymentData);
-            const payment = await Payment.create(paymentData);
-            if (!payment) {
-                return res.status(400).send({ status: 'failed', error: 'Create payment failed' });
-            } else {
-                return res.status(201).send({ payment, paymentDetails, status: 'success', message: 'Payment recorded successfully!' });
-            }
-        } else {
-            return res.status(400).send({ status: 'failed', error: 'Invalid Service Access Id saId' });
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Create payment failed on C', error });
-    }
-}
-
-async function getAll(req, res, data) {
-    try {
-        const user = await User.findByPk(data.userId);
-        const whatsapp = await Whatsapp.findAll({ userId: user.id });
-
-        if (!whatsapp) {
-            return res.status(401).json({ message: 'Whatsapp registration failed, Invalid Token, try again' });
+        const user = await User.findOne({ _id: userId});
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        return res.status(200).json({ status: 'success', whatsapp });
-    } catch (error) {
-        console.error(error.message);
-        if (error instanceof Sequelize.UniqueConstraintError) {
-            res.status(400).json({ message: 'Email already exists' });
-        } else {
-            res.status(500).json({ message: 'Registration failed on C' });
-        }
-    }
-}
-
-async function getOne(req, res, data) {
-    try {
-        const payment = await Payment.findOne({ where: { paymentReference: data.paymentReference } });
-        if (!payment) {
-            return res.status(401).json({ message: 'No payment found, Try again' });
-        }
-        return res.status(200).json({ status: 'success', payment });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: 'get one payment failed on C' });
-    }
-}
-
-async function verify(req, res, data) {
-    try {
-        const payment = await Payment.findOne({ where: { paymentReference: data.paymentReference } });
-        if (!payment) {
-            return res.status(401).json({ message: 'No payment found, Try again' });
+        const paymentType = await PaymentType.findOne({ _id: paymentTypeId});
+        if (!paymentType) {
+            return res.status(404).json({ message: 'Payment type not found' });
         }
 
-        let serviceaccess = await ServiceAccess.findByPk(payment.saId);
-        if (!serviceaccess) {
-            return res.status(401).json({ message: 'No service access found, Try again' });
-        }
-
-        const gateway = payment.gateway;
-        const paymentReference = payment.paymentReference;
-
-        let paymentGateway;
-        if (gateway === 'Paystack') {
-            paymentGateway = new PaystackGateway();
-        } else if (gateway === 'Stripe') {
-            paymentGateway = new StripeGateway();
-        } else {
-            return res.status(400).send({ status: 'failed', error: 'Invalid payment gateway' });
-        }
-
-        // check paystack for payment status
-        const verificationDetails = await paymentGateway.verifyPayment(paymentReference);
-
-        // checking my payment status
-        if (verificationDetails.data.status === 'success') {
-            payment.paymentStatus = 'Completed';
-            payment.amountPaid = verificationDetails.data.amount / 100.0;
-            serviceaccess.status = 'Active';
-            serviceaccess.amountPaid = verificationDetails.data.amount / 100.0;
-
-            // check if payment is not already used
-            if (payment.paymentFullfilled !== 'Yes') {
-                console.log('not yet ready');
-                payment.paymentFullfilled = 'Yes';
-                serviceaccess.paymentNextDate = payment.paymentNextDate;
-                // update serviceAccess
-
-                // :adding the total months to the sa expire.
-                await serviceaccess.save();
-            }
-        } else if (verificationDetails.status === 'failed') {
-            payment.paymentStatus = 'Failed';
-        }
         await payment.save();
-        return res.send({ payment, verificationDetails, status: 'success', message: 'Payment status updated successfully!' });
+        res.status(201).json({ message: 'Payment created successfully', payment });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'get one payment failed on C' });
+        res.status(500).json({ error: error.message });
     }
-}
+};
+
+// Get all payments
+const getAllPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate('userId', 'firstName lastName email')
+      .populate('paymentTypeId', 'ptPurpose ptAmount');
+
+    res.status(200).json(payments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a specific payment by ID
+const getPaymentById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Find the payment by ID
+        const checkpayment = await Payment.findById(id);
+
+        // Check user access
+        const hasAccess = useraccess.userHaveAccess(req.user._id, checkpayment.userId, req.user.role);
+        if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+
+        // Populate user and payment type information
+        const payment = await Payment.findById(id)
+            .populate('userId', 'firstName lastName email')
+            .populate('paymentTypeId', 'ptPurpose ptAmount');
+        
+        if (!payment) {
+            return res.status(404).json({ message: 'Payment not found' });
+        }
+
+        res.status(200).json(payment);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Update a specific payment
+const updatePayment = async (req, res) => {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    try {
+        // Check user access
+        const checkpayment = await Payment.findById( id );
+        const hasAccess = useraccess.userHaveAccess(req.user._id, checkpayment.userId, req.user.role);
+        if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+        
+        const payment = await Payment.findByIdAndUpdate(id, updateData, { new: true });
+        if (!payment) {
+            return res.status(404).json({ message: 'Payment not found' });
+        }
+        res.status(200).json({ message: 'Payment updated successfully', payment });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete a specific payment
+const deletePayment = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const checkpayment = await Payment.findById( id );
+    const hasAccess = useraccess.userHaveAccess(req.user._id, checkpayment.userId, req.user.role);
+    if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+    
+    const payment = await Payment.findByIdAndDelete(id);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+    res.status(200).json({ message: 'Payment deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get payments by user ID
+const getPaymentsByUserId = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Check user access
+    const hasAccess = useraccess.userHaveAccess(req.user._id, userId, req.user.role);
+    if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+
+    const payments = await Payment.find({ userId })
+      .populate('userId', 'firstName lastName email')
+      .populate('paymentTypeId', 'ptPurpose ptAmount');
+    if (!payments || payments.length === 0) {
+      return res.status(404).json({ message: 'No payments found for this user' });
+    }
+    res.status(200).json(payments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all payments for a specific payment type
+const getPaymentsByPaymentTypeId = async (req, res) => {
+    const { paymentTypeId } = req.params;
+    try {
+        const payments = await Payment.find({ paymentTypeId })
+            .populate('userId', 'firstName lastName email')
+            .populate('paymentTypeId', 'ptPurpose ptAmount');
+        res.status(200).json(payments);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+  
+// Get all pending payments
+const getPendingPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find({ paymentStatus: 'pending' })
+            .populate('userId', 'firstName lastName email')
+            .populate('paymentTypeId', 'ptPurpose ptAmount');
+        res.status(200).json(payments);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Get all completed payments
+const getCompletedPayments = async (req, res) => {
+    try {
+      const payments = await Payment.find({ paymentStatus: 'completed' })
+        .populate('userId', 'firstName lastName email')
+        .populate('paymentTypeId', 'ptPurpose ptAmount');
+      res.status(200).json(payments);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+};
+  
+// Get payments for a specific user and payment type
+const getPaymentsByUserIdAndPaymentTypeId = async (req, res) => {
+    const { userId, paymentTypeId } = req.params;
+    try {
+        // Check user access
+        console.log(req.user._id+' '+userId)
+        const hasAccess = useraccess.userHaveAccess(req.user._id, userId, req.user.role);
+        if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+
+        const payments = await Payment.find({ userId, paymentTypeId })
+            .populate('userId', 'firstName lastName email')
+            .populate('paymentTypeId', 'ptPurpose ptAmount');
+        res.status(200).json(payments);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 const paymentController = {
-  generateToken,
-  create,
-  getAll,
-  getOne,
-  verify,
+    createPayment,
+    getAllPayments,
+    getPaymentById,
+    updatePayment,
+    deletePayment,
+    getPaymentsByUserId,
+    getPaymentsByPaymentTypeId,
+    getPendingPayments,
+    getCompletedPayments,
+    getPaymentsByUserIdAndPaymentTypeId,
 };
 
 export default paymentController;

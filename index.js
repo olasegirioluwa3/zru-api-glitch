@@ -1,42 +1,72 @@
 import express from 'express';
-import { config } from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import OpenAI from 'openai';
-import axios from 'axios';
 import cors from 'cors';
-import { createServer } from 'http';
+import { config } from 'dotenv';
+import { connectDb, default as models } from './models/index.js';
 import userRoutes from './routes/user/userAuthRoutes.js';
-import paymentRoutes from './routes/paymentRoutes.js';
-import adminRoutes from './routes/admin/adminAuthRoutes.js';
-import regCenterRoutes from './routes/regcenter/regCenterAuthRoutes.js';
-import db from './models/index.js';
-const sequelize = db.sequelize;
+import userAcademicRoutes from './routes/user/userAcademicRoutes.js';
+import userApplicationRoutes from './routes/user/userApplicationRoutes.js';
+import userPaymentRoutes from './routes/user/userPaymentRoutes.js';
 
-import http from 'http';
-// Import error logging middleware
+// import paymentRoutes from './routes/paymentRoutes.js';
+import adminApplicationRoutes from './routes/admin/adminApplicationRoutes.js';
+import adminAuthRoutes from './routes/admin/adminAuthRoutes.js';
+import adminPaymentRoutes from './routes/admin/adminPaymentRoutes.js';
+import adminAcademicRoutes from './routes/admin/adminAcademicRoutes.js';
+// import adminSchoolLeavingRoutes from './routes/admin/adminSchoolLeavingRoutes.js';
+// import adminAdmissionTestRoutes from './routes/admin/adminAdmissionTestRoutes.js';
 
-// Use error logging middleware
+import regCenterAuthRoutes from './routes/regcenter/regCenterAuthRoutes.js';
+// import regCenterAcademicRoutes from './routes/regcenter/regCenterAcademicRoutes.js';
+import path from 'path';
+
+config();
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("/public"));
-app.use('/uploads', express.static("public/uploads"));
-// app.use('/profileimgs', express.static("public/profileimgs"));
 
-userRoutes(app, null, sequelize);
-paymentRoutes(app, null, sequelize);
-adminRoutes(app, null, sequelize);
-regCenterRoutes(app, null, sequelize);
+// Static files
+const __dirname = path.resolve();
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Routes
+userRoutes(app);
+userAcademicRoutes(app, null, null);
+userApplicationRoutes(app, null, null);
+userPaymentRoutes(app, null, null);
+// paymentRoutes(app, null, null);
+
+adminAuthRoutes(app, null, null);
+adminAcademicRoutes(app, null, null);
+adminPaymentRoutes(app, null, null);
+adminApplicationRoutes(app, null, null);
+// adminAdmissionTestRoutes(app, null, null);
+// adminSchoolLeavingRoutes(app, null, null);
+
+regCenterAuthRoutes(app, null, null);
+// regCenterAcademicRoutes(app, null, null);
+// ... other routes
 
 app.get('/', (req, res) => {
   return res.status(201).json({ message: 'Welcome to ZionAI API. Hi' });
 });
-       
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Connect to MongoDB and start server
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+connectDb().then(() => {
+  console.log('Connected to MongoDB');
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch(error => {
+  console.error('Error connecting to MongoDB:', error);
 });

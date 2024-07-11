@@ -4,7 +4,7 @@ import regCenterController from '../../controllers/regCenterController.js';
 
 const router = express.Router();
 
-export default function regCenterRoutes(app, io, sequelize) {
+export default function regCenterAuthRoutes(app, io, sequelize) {
     router.post('/register', async (req, res) => {
         try {
             await regCenterController.register(req, res, req.body);
@@ -16,6 +16,7 @@ export default function regCenterRoutes(app, io, sequelize) {
     // router.post('/register', register);
     router.post('/login', regCenterController.login);
     router.post('/verify-account-email/:emailVerificationToken', async (req, res) => {
+        console.log("api/regcenter/verify-account-email/:emailVerificationToken");
         try {
             await regCenterController.verifyEmail(req, res, req.params);
         } catch (error) {
