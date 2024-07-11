@@ -1,6 +1,6 @@
 import FacultyProgram from '../models/facultyprogram.js'; // Make sure to replace with the correct path to your FacultyProgram model
 import FacultyDepartment from '../models/facultydepartment.js';
-import Faculty from '../models/Faculty.js';
+import Faculty from '../models/faculty.js';
 
 const createDepartmentProgram = async (req, res) => {
   try {
