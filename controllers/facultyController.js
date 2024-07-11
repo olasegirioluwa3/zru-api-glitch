@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Faculty from '../models/Faculty.js'; // Make sure to replace with the correct path to your Faculty model
+import Faculty from '../models/faculty.js'; // Make sure to replace with the correct path to your Faculty model
 
 export const createFaculty = async (req, res) => {
   try {
