@@ -51,7 +51,7 @@ regCenterAuthRoutes(app, null, null);
 // ... other routes
 
 app.get('/', (req, res) => {
-  return res.status(201).json({ message: 'Welcome to ZionAI API. Hi' });
+  return res.status(201).json({ message: 'Welcome to Zion Reborn University API' });
 });
 
 // Error handling middleware
