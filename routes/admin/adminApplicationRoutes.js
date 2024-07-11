@@ -11,9 +11,11 @@ export default function adminApplicationRoutes(app, io, sequelize) {
     router.get('/applications', authenticateToken, applicationController.getAllApplications);
     router.get('/applications/user/:userId', authenticateToken, applicationController.getApplicationsByUserId);
     router.get('/applications/:id', authenticateToken, applicationController.getApplicationById);
-    router.put('/applications/:id', authenticateToken, applicationController.updateUserApplication);
-    router.put('/applications/:id/status', authenticateToken, applicationController.updateApplicationStatus);
-    router.put('/applications/:id/program', authenticateToken, applicationController.updateApplicationProgram);
+    router.put('/applications/:id', authenticateToken, applicationController.updateApplication);
+    // router.put('/applications/:id/status', authenticateToken, applicationController.updateApplicationStatus);
+    // router.put('/applications/:id/program', authenticateToken, applicationController.updateApplicationProgram);
+    router.put('/applications/:id/reject', authenticateToken, applicationController.rejectApplication);
+    router.put('/applications/:id/accept', authenticateToken, applicationController.acceptApplication);
     router.delete('/applications/:id', authenticateToken, applicationController.deleteApplication);
     
     // application payment

@@ -25,8 +25,6 @@ export const createApplication = async (req, res) => {
     if (!program) {
       return res.status(400).json({ message: 'Invalid programId' });
     }
-    application.courseName = program.programName;
-
     const savedApplication = await application.save();
     res.status(201).json({ message: 'Application submitted successfully', savedApplication });
   } catch (error) {
@@ -72,21 +70,129 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
+export const reviseUserApplication = async (req, res) => {
+  const { id } = req.params;
+  const { applicationDetails, userId } = req.body;
+  const applicationStatus = "in-review";
+  try {
+    const checkApplication = await Application.findOne({
+      _id: id, userId: userId, applicationStatus: "rejected" 
+    });
+    if (!checkApplication) {
+      return res.status(400).json({ message: 'Application not accessible' });
+    }
+
+    const application = await Application.findByIdAndUpdate(id, 
+      { applicationDetails, applicationStatus }, { new: true }
+    );
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    res.status(200).json(application);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// admin-only
+export const rejectApplication = async (req, res) => {
+  const { id } = req.params;
+  const { applicationDetails } = req.body;
+  const applicationStatus = "rejected";
+  try {
+    const application = await Application.findByIdAndUpdate(id, 
+      { applicationDetails, applicationStatus }, { new: true }
+    );
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    res.status(200).json(application);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// admin-only
+export const acceptApplication = async (req, res) => {
+  const { id } = req.params;
+  const { applicationDetails } = req.body;
+  const applicationStatus = "accepted";
+  try {
+    const application = await Application.findByIdAndUpdate(id, 
+      { applicationDetails, applicationStatus }, { new: true }
+    );
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    res.status(200).json(application);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// user update application
 export const updateUserApplication = async (req, res) => {
   const { id } = req.params;
-  const { userId, programId } = req.body;
-  const updateData = req.body;
+  const { userId } = req.body;
+  const updateData = {};
 
-  const checkApplication = await Application.findOne({ _id: id, userId: userId, applicationStatus: "pending" });
+  const checkApplication = await Application.findOne({
+    _id: id, userId: userId, applicationStatus: "pending" 
+  });
   if (!checkApplication) {
     return res.status(400).json({ message: 'Application not accessible' });
   }
 
-  const program = await FacultyProgram.findById(programId);
-  if (!program) {
-    return res.status(400).json({ message: 'Invalid programId' });
+  const program = await FacultyProgram.findById(req?.body?.programId);
+  if (program) {
+    updateData.programId = program?._id;
+    updateData.courseName = program?.programName;
   }
-  updateData.courseName = program.programName;
+
+  const entryType = req?.body?.entryType;
+  if (entryType) {
+    updateData.entryType = entryType;
+  }
+  
+  try {
+    const application = await Application.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    
+    res.status(200).json(application);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// admin-only
+export const updateApplication = async (req, res) => {
+  const { id } = req.params;
+  const updateData = {};
+
+  const checkApplication = await Application.findOne({
+    _id: id
+  });
+  if (!checkApplication) {
+    return res.status(400).json({ message: 'Application not accessible' });
+  }
+
+  const program = await FacultyProgram.findById(req?.body?.programId);
+  if (program) {
+    updateData.programId = program._id;
+    updateData.courseName = program.programName;
+  }
+
+  const entryType = req.body.entryType;
+  if (entryType) {
+    updateData.entryType = entryType;
+  }
   
   try {
     const application = await Application.findByIdAndUpdate(
@@ -400,7 +506,7 @@ const verifyApplicationPayment = async (req, res) => {
       paymentGateway = new StripeGateway();
     } else {
       return res.status(400).json({ message: 'Invalid payment gateway' });
-    }
+    } 
     paymentDetails = await paymentGateway.verifyPayment(reference);
 
     if (paymentDetails.data.status !== 'success') {
@@ -486,7 +592,11 @@ const applicationController = {
   getApplicationsByUserId,
   updateApplicationStatus,
   updateApplicationProgram,
+  rejectApplication,
+  acceptApplication,
+  reviseUserApplication,
   updateUserApplication,
+  updateApplication,
   payForApplication,
   payForAcceptance,
   verifyApplicationPayment,

@@ -9,6 +9,8 @@ export default function userApplicationRoutes(app, io, sequelize) {
     router.get('/applications/user/:userId', authenticateToken, applicationController.getApplicationsByUserId);
     router.get('/applications/:id', authenticateToken, applicationController.getApplicationById);
     router.put('/applications/:id', authenticateToken, applicationController.updateUserApplication);
+    router.put('/applications/:id/revise', authenticateToken, applicationController.reviseUserApplication);
+    // router.put('/applications/:id/program', authenticateToken, applicationController.updateApplicationProgram);
     router.delete('/applications/:id', authenticateToken, applicationController.deleteApplication);
     
     // application payment
@@ -19,4 +21,3 @@ export default function userApplicationRoutes(app, io, sequelize) {
 
     app.use('/api/user', router);
 }
-
