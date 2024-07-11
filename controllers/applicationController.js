@@ -1,6 +1,6 @@
 // applicationController.js
 import Application from '../models/application.js';
-import useraccess from '../utils/userAccess.js';
+import useraccess from '../utils/useraccess.js';
 import FacultyProgram from '../models/facultyprogram.js';
 import PaymentType from '../models/paymenttype.js';
 import Payment from '../models/payment.js';
