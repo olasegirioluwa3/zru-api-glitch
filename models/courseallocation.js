@@ -21,6 +21,11 @@ const courseAllocationSchema = new mongoose.Schema({
     enum: ['first', 'second', 'third', 'fourth'],
     default: 'first',
   },
+  courseType: {
+    type: String,
+    enum: ['compulsory', 'elective', 'optional'],
+    default: 'compulsory',
+  },
   allocationDetails: {
     type: String,
     default: '',

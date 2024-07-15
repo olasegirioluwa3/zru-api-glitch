@@ -40,9 +40,18 @@ export default function userAuthRoutes (app, io, sequelize) {
     }
   });
 
-  router.post('/profile', authenticateToken, async (req, res) => {
+  router.post('/:id/profile', authenticateToken, async (req, res) => {
     try {
       await userController.getProfile(req, res);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: "failed", message: 'Failed to fetch profile', error: error.message });
+    }
+  });
+
+  router.post('/profile', authenticateToken, async (req, res) => {
+    try {
+      await userController.getMyProfile(req, res);
     } catch (error) {
       console.error(error);
       res.status(500).json({ status: "failed", message: 'Failed to fetch profile', error: error.message });

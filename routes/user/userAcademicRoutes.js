@@ -5,6 +5,7 @@ import courseController from '../../controllers/courseController.js';
 import facultyProgramController from '../../controllers/facultyProgramController.js';
 import facultyDepartmentController from '../../controllers/facultyDepartmentController.js';
 import courseAllocationController from '../../controllers/courseAllocationController.js';
+import sessionController from '../../controllers/sessionController.js';
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ export default function userAcademicRoutes(app, io, sequelize) {
     router.get('/departments/:id', authenticateToken, facultyDepartmentController.getActiveDepartmentById);
     router.get('/departments', authenticateToken, facultyDepartmentController.listAllActiveDepartments);
     router.get('/faculties/:facultyId/departments', authenticateToken, facultyDepartmentController.listActiveDepartmentsForActiveFaculty);
+
+    // Create a new session
+    router.get('/session/public', sessionController.getAllSessionsByUser);
+    router.get('/session/:id', sessionController.getSessionById);
 
     app.use('/api/user', router);
 }

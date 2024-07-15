@@ -6,6 +6,7 @@ import courseAllocationController from '../../controllers/courseAllocationContro
 import courseController from '../../controllers/courseController.js';
 import facultyProgramController from '../../controllers/facultyProgramController.js';
 import facultyMemberController from '../../controllers/facultyMemberController.js';
+import sessionController from '../../controllers/sessionController.js';
 
 const router = express.Router();
 export default function adminAcademicRoutes(app, io, sequelize) {
@@ -55,6 +56,14 @@ export default function adminAcademicRoutes(app, io, sequelize) {
     router.delete('/faculty-members/:id', authenticateToken, facultyMemberController.removeDepartmentMember);
     router.get('/faculty-members', authenticateToken, facultyMemberController.listAllDepartmentMember);
     router.get('/faculties/:departmentId/faculty-members', authenticateToken, facultyMemberController.listMembersForDepartment);
+
+    // Create a new session
+    router.post('/session', authenticateToken, sessionController.createSession);
+    router.get('/session', authenticateToken, sessionController.getAllSessions);
+    router.get('/session/public', sessionController.getAllSessionsByUser);
+    router.get('/session/:id', authenticateToken, sessionController.getSessionById);
+    router.put('/session/:id', authenticateToken, sessionController.updateSession);
+    router.delete('/session/:id', authenticateToken, sessionController.deleteSession);
 
     app.use('/api/admin', router);
 }

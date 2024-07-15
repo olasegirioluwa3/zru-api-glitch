@@ -68,7 +68,7 @@ async function loginUser(req, res, data) {
     }
 
     const token = jwt.sign(
-      { id: user._id, userRole: user.role },
+      { id: user._id, role: "user" },
       process.env.APP_SECRET_KEY,
       { expiresIn: "100h" }
     );
@@ -83,6 +83,23 @@ async function loginUser(req, res, data) {
 async function getProfile(req, res) {
   try {
     const userId = req.user.userId;
+
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+async function getMyProfile(req, res) {
+  try {
+    const userId = req.user._id;
 
     const user = await User.findById(userId).select("-password");
 
@@ -352,6 +369,7 @@ const userController = {
   registerUser,
   loginUser,
   getProfile,
+  getMyProfile,
   updateProfile,
   updateProfilePicture,
   updateCoverPicture,

@@ -309,8 +309,16 @@ export const updateApplicationProgram = async (req, res) => {
 
 export const deleteUserApplication = async (req, res) => {
   const { id } = req.params;
+  const { userId } = req.body;
   try {
-    const application = await Application.findOneAndDelete({ _id: id, userId: req.user._id });
+    const checkApplication = await Application.findOne({
+      _id: id, userId: userId, applicationStatus: "pending" 
+    });
+    if (!checkApplication) {
+      return res.status(400).json({ message: 'Application not accessible' });
+    }
+    
+    const application = await Application.findByIdAndDelete(id);
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
@@ -582,6 +590,134 @@ const verifyAcceptancePayment = async (req, res) => {
   }
 };
 
+const generateMatric = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, programId, applicationId, courseName } = req.body;
+    
+    let paymentData = {};
+    const application = await Application.findOne( {_id: id });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    if (application.applicationStatus !== 'completed') {
+      return res.status(400).json({ message: 'Only applications with status completed can make registration payment' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: 'unknown user' });
+    }
+
+    const paymentType = await PaymentType.findOne({ ptPurpose: 'application', programId: application.programId, ptStatus: "active" });
+    if (!paymentType) {
+      return res.status(400).json({ message: `Registration fee is not available for ${application.courseName}, please, contact your admin` });
+    }
+
+    const amount = parseInt(paymentType.ptAmount, 10);
+    const fullName = `${user.firstName} ${user.lastName}`;
+
+    // initiate payment
+    paymentData.email = user.email;
+    paymentData.full_name = fullName;
+
+    // get cost info of the service
+    paymentData.gateway = gateway;
+    paymentData.currency = currency;
+
+    // Calculate price and paymentNextDate
+    let price = parseInt(amount, 10);
+
+    let paymentGateway = PaymentGateway;
+    let finalAmount;
+
+    if (paymentData.gateway === 'paystack') {
+      paymentGateway = new PaystackGateway();
+      const decimalFee = 1.95 / 100.0;
+      const flatFee = (parseInt(price, 10) * (1.5 / 100)) + 100;
+      const capFee = 2000.0;
+      const applicableFees = (parseInt(decimalFee, 10) * parseInt(price, 10)) + parseInt(flatFee, 10);
+      finalAmount = applicableFees >= capFee ? parseInt(price, 10) + parseInt(capFee, 10) : ((parseInt(price, 10) + parseInt(flatFee, 10)) / (1 - parseInt(decimalFee, 10))) + 0.01;
+    } else if (paymentData.gateway === 'stripe') {
+      paymentGateway = new StripeGateway();
+    } else {
+      return res.status(400).send({ status: 'failed', error: 'Invalid payment gateway' });
+    }
+
+    paymentData.amount = parseInt(finalAmount, 10);
+    const callbackUrl = `${process.env.APP_WEBSITE_URL}/applications/payment/application/verify`;
+    const paymentDetails = await paymentGateway.initiatePayment(paymentData.amount, paymentData.currency, paymentData, callbackUrl);
+    let paymentdetails = paymentDetails.data;
+    
+    const matricNumber = generateMatricNumber();
+    const paymentReference = `PAY${Date.now()}`;
+    const paymentLink = `https://paymentgateway.com/pay?reference=${paymentReference}`;
+
+    const payment = new Payment({
+        userId,
+        amount,
+        reference: paymentReference,
+        status: 'pending',
+    });
+    await payment.save();
+
+      let student = await Student.findOne({ userId });
+      if (!student) {
+          student = new Student({
+              userId,
+              programId,
+              applicationId,
+              courseName,
+              matricNumber,
+              studentStatus: 'pending',
+          });
+      } else {
+          student.matricNumber = matricNumber;
+      }
+      await student.save();
+
+      res.status(201).json({ paymentLink, matricNumber });
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
+};
+
+const verifyFirstTuition = async (req, res) => {
+// verifyFirstTuition: async (req, res) => {
+  try {
+      const { paymentReference } = req.body;
+
+      const payment = await Payment.findOne({ reference: paymentReference });
+      if (!payment) {
+          return res.status(404).json({ message: 'Payment not found' });
+      }
+
+      if (payment.status !== 'successful') {
+          // Mock payment verification process
+          payment.status = 'successful';
+          await payment.save();
+      }
+
+      const student = await Student.findOne({ userId: payment.userId });
+      if (student) {
+          student.studentStatus = 'active';
+          student.matricNumber = generateMatricNumber();
+          await student.save();
+      }
+
+      const application = await Application.findOne({ userId: payment.userId });
+      if (application) {
+          application.status = 'done';
+          await application.save();
+      }
+
+      res.status(200).json({ message: 'Student verified and matriculated successfully' });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+
 const applicationController = {
   createApplication,
   getAllApplications,
@@ -600,7 +736,9 @@ const applicationController = {
   payForApplication,
   payForAcceptance,
   verifyApplicationPayment,
-  verifyAcceptancePayment
+  verifyAcceptancePayment,
+  generateMatric,
+  verifyFirstTuition,
 }
 
 export default applicationController
