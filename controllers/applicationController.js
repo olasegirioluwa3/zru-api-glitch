@@ -5,26 +5,36 @@ import FacultyProgram from '../models/facultyprogram.js';
 import PaymentType from '../models/paymenttype.js';
 import Payment from '../models/payment.js';
 import User from '../models/user.js';
+import Session from '../models/session.js';
 import PaymentGateway from '../services/gateways/paymentGateway.js';
 import PaystackGateway from '../services/gateways/paystackGateway.js';
 import StripeGateway from '../services/gateways/stripeGateway.js';
 
 export const createApplication = async (req, res) => {
-  const { userId, programId, entryType } = req.body;
+  const { userId, sessionId, programId, entryType } = req.body;
   try {
-    const application = new Application({
-      userId,
-      programId,
-      entryType
-    });
-
     const hasAccess = useraccess.userHaveAccess(req.user._id, userId, req.user.role);
     if (!hasAccess) return res.status(400).json({ message: "user access denied" });
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(400).json({ message: 'Invalid sessionId' });
+    }
 
     const program = await FacultyProgram.findById(programId);
     if (!program) {
       return res.status(400).json({ message: 'Invalid programId' });
     }
+    const courseName = program.programName;
+
+    const application = new Application({
+      userId,
+      sessionId,
+      programId,
+      entryType,
+      courseName
+    });
+
     const savedApplication = await application.save();
     res.status(201).json({ message: 'Application submitted successfully', savedApplication });
   } catch (error) {
@@ -46,7 +56,9 @@ export const getApplicationById = async (req, res) => {
   try {
     const application = await Application.findById(id)
     .populate('userId', 'firstName middleName lastName username email gender phoneNumber address city localGovernment state dateOfBirth')
-    .populate('programId', 'programCourse programName programCode degreeType programDuration departmentId');
+    .populate('programId', 'programCourse programName programCode degreeType programDuration departmentId')
+    .populate('sessionId', 'sessionName sessionStart sessionEnd sessionDescription');
+
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
