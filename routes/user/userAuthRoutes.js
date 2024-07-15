@@ -3,7 +3,6 @@ const router = express.Router();
 import authenticateToken from '../../middlewares/auth.user.middleware.js';
 import uploads from '../../middlewares/upload.user.middleware.js';
 const { uploadProfilePicture, deleteExistingProfilePicture, uploadCoverPicture, deleteExistingCoverPicture } = uploads;
-import phoneNumber from 'phone-number';
 import userController from '../../controllers/userController.js';
 import validateUserData from "../../middlewares/validator/userValidator.js";
 

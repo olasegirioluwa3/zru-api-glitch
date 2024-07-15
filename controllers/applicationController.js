@@ -45,7 +45,7 @@ export const getApplicationById = async (req, res) => {
   const { id } = req.params;
   try {
     const application = await Application.findById(id)
-    .populate('userId', 'firstName lastName email')
+    .populate('userId', 'firstName middleName lastName username email gender phoneNumber address city localGovernment state dateOfBirth')
     .populate('programId', 'programCourse programName programCode degreeType programDuration departmentId');
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });

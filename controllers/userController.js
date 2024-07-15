@@ -116,16 +116,13 @@ async function getMyProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const userId = req.user.userId;
-    const { firstName, lastName, bio } = req.body;
+    const id = req.params.id;
 
-    const user = await User.findByIdAndUpdate(userId, { firstName, lastName, bio });
-
+    const user = await User.findByIdAndUpdate(id, req.body, { new: true });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: 'User not found' });
     }
-
-    res.status(200).json({ message: "Profile updated successfully" });
+    res.status(200).json({ message: 'Profile updated successfully', user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to update profile" });
