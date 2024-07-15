@@ -36,6 +36,7 @@ export default function userAcademicRoutes(app, io, sequelize) {
 
     // Create a new session
     router.get('/session/public', sessionController.getAllSessionsByUser);
+    router.get('/session/current', sessionController.getCurrentSession);
     router.get('/session/:id', sessionController.getSessionById);
 
     app.use('/api/user', router);

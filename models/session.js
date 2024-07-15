@@ -7,7 +7,6 @@ const sessionSchema = new mongoose.Schema({
   },
   sessionStart: {
     type: Date,
-    required: true,
     unique: true,
   },
   sessionEnd: {
@@ -20,7 +19,7 @@ const sessionSchema = new mongoose.Schema({
   },
   sessionStatus: {
     type: String,
-    enum: ['pending', 'active', 'removed'],
+    enum: ['pending', 'current', 'past'],
     default: 'pending',
   },
 }, {

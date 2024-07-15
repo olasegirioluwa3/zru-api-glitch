@@ -36,12 +36,24 @@ const getAllSessions = async (req, res) => {
 const getAllSessionsByUser = async (req, res) => {
     try {
         const sessions = await Session.find({
-            sessionStatus: 'active'
+            sessionStatus: 'current'
         });
         res.status(200).json(sessions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+};
+
+// Get current that user can view
+const getCurrentSession = async (req, res) => {
+  try {
+      const session = await Session.findOne({
+          sessionStatus: 'current'
+      });
+      res.status(200).json(session);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 };
 
 // Get a single session by ID
@@ -102,6 +114,7 @@ const sessionController = {
   createSession,
   getAllSessions,
   getAllSessionsByUser,
+  getCurrentSession,
   getSessionById,
   updateSession,
   deleteSession,
