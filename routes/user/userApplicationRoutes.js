@@ -7,7 +7,6 @@ export default function userApplicationRoutes(app, io, sequelize) {
     // User can manage applications
     router.post('/applications', authenticateToken, applicationController.createApplication);
     router.get('/applications/user/:userId', authenticateToken, applicationController.getApplicationsByUserId);
-    
     router.get('/applications/:id', authenticateToken, applicationController.getApplicationById);
     router.put('/applications/:id', authenticateToken, applicationController.updateUserApplication);
     router.put('/applications/:id/revise', authenticateToken, applicationController.reviseUserApplication);
