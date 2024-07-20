@@ -366,7 +366,7 @@ const applicationFeeInit = async (req, res) => {
       return res.status(400).json({ message: `Registration fee is not available for ${application.courseName}, please, contact your admin` });
     }
 
-    res.status(201).json({ paymentType });
+    res.status(200).json(paymentType);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -480,7 +480,7 @@ const acceptanceFeeInit = async (req, res) => {
       return res.status(400).json({ message: `Acceptance fee is not available for ${application.courseName}, please, contact your admin` });
     }
 
-    res.status(201).json({ paymentType });
+    res.status(200).json(paymentType);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
