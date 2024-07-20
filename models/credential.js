@@ -20,8 +20,12 @@ const credentialSchema = new mongoose.Schema({
   },
   credentialStatus: {
     type: String,
-    enum: ['uploaded', 'verified', 'rejected'],
+    enum: ['uploaded', 'approved', 'rejected'],
     default: 'uploaded'
+  },
+  credentialComment: {
+    type: String,
+    default: ''
   },
   createdAt: {
     type: Date,

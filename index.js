@@ -5,13 +5,15 @@ import { connectDb, default as models } from './models/index.js';
 import userRoutes from './routes/user/userAuthRoutes.js';
 import userAcademicRoutes from './routes/user/userAcademicRoutes.js';
 import userApplicationRoutes from './routes/user/userApplicationRoutes.js';
+import userCredentialRoutes from './routes/user/userCredentialRoutes.js';
 import userPaymentRoutes from './routes/user/userPaymentRoutes.js';
 
-// import paymentRoutes from './routes/paymentRoutes.js';
+// All admin role controllers
+import adminAcademicRoutes from './routes/admin/adminAcademicRoutes.js';
 import adminApplicationRoutes from './routes/admin/adminApplicationRoutes.js';
+import adminCredentialRoutes from './routes/admin/adminCredentialRoutes.js';
 import adminAuthRoutes from './routes/admin/adminAuthRoutes.js';
 import adminPaymentRoutes from './routes/admin/adminPaymentRoutes.js';
-import adminAcademicRoutes from './routes/admin/adminAcademicRoutes.js';
 // import adminSchoolLeavingRoutes from './routes/admin/adminSchoolLeavingRoutes.js';
 // import adminAdmissionTestRoutes from './routes/admin/adminAdmissionTestRoutes.js';
 
@@ -37,12 +39,14 @@ userRoutes(app);
 userAcademicRoutes(app, null, null);
 userApplicationRoutes(app, null, null);
 userPaymentRoutes(app, null, null);
+userCredentialRoutes(app, null, null);
 // paymentRoutes(app, null, null);
 
 adminAuthRoutes(app, null, null);
 adminAcademicRoutes(app, null, null);
 adminPaymentRoutes(app, null, null);
 adminApplicationRoutes(app, null, null);
+adminCredentialRoutes(app, null, null);
 // adminAdmissionTestRoutes(app, null, null);
 // adminSchoolLeavingRoutes(app, null, null);
 
