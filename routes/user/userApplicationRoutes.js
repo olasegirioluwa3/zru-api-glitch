@@ -15,11 +15,12 @@ export default function userApplicationRoutes(app, io, sequelize) {
     router.delete('/applications/:id', authenticateToken, applicationController.deleteApplication);
     
     // application payment
+    router.get('/applications/:id/pay/application', authenticateToken, applicationController.applicationFeeInit);
     router.post('/applications/:id/pay/application', authenticateToken, applicationController.payForApplication);
+    router.get('/applications/:id/pay/acceptance', authenticateToken, applicationController.acceptanceFeeInit);
     router.post('/applications/:id/pay/acceptance', authenticateToken, applicationController.payForAcceptance);
     router.get('/applications/payment/application/verify', applicationController.verifyApplicationPayment);
     router.get('/applications/payment/acceptance/verify', applicationController.verifyAcceptancePayment);
-
     router.post('/applications/:id/pay/generate-matric', authenticateToken, applicationController.generateMatric);
     router.post('/applications/payment/firsttuition/verify', authenticateToken, applicationController.verifyFirstTuition);
 

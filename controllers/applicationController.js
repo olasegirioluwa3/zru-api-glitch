@@ -342,6 +342,36 @@ export const deleteUserApplication = async (req, res) => {
   }
 };
 
+const applicationFeeInit = async (req, res) => {
+  const { id } = req.params;
+  const { gateway, currency, userId } = req.body;
+
+  try {
+    const application = await Application.findOne( {_id: id });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    if (application.applicationStatus !== 'pending') {
+      return res.status(400).json({ message: 'Only applications with status pending can make registration payment' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: 'unknown user' });
+    }
+
+    const paymentType = await PaymentType.findOne({ ptPurpose: 'application', programId: application.programId, ptStatus: "active" });
+    if (!paymentType) {
+      return res.status(400).json({ message: `Registration fee is not available for ${application.courseName}, please, contact your admin` });
+    }
+
+    res.status(201).json({ paymentType });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const payForApplication = async (req, res) => {
   const { id } = req.params;
   const { gateway, currency, userId } = req.body;
@@ -421,6 +451,37 @@ const payForApplication = async (req, res) => {
     await payment.save();
 
     res.status(201).json({ payment, application });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const acceptanceFeeInit = async (req, res) => {
+  const { id } = req.params;
+  const { gateway, currency, userId } = req.body;
+
+  try {
+    let paymentData = {};
+    const application = await Application.findOne( {_id: id });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    if (application.applicationStatus !== 'accepted') {
+      return res.status(400).json({ message: 'Only applications with status accepted can pay acceptance fee' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: 'unknown user' });
+    }
+
+    const paymentType = await PaymentType.findOne({ ptPurpose: 'acceptance', programId: application.programId, ptStatus: "active" });
+    if (!paymentType) {
+      return res.status(400).json({ message: `Acceptance fee is not available for ${application.courseName}, please, contact your admin` });
+    }
+
+    res.status(201).json({ paymentType });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -747,7 +808,9 @@ const applicationController = {
   reviseUserApplication,
   updateUserApplication,
   updateApplication,
+  applicationFeeInit,
   payForApplication,
+  acceptanceFeeInit,
   payForAcceptance,
   verifyApplicationPayment,
   verifyAcceptancePayment,
