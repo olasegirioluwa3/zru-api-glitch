@@ -461,7 +461,6 @@ const acceptanceFeeInit = async (req, res) => {
   const { gateway, currency, userId } = req.body;
 
   try {
-    let paymentData = {};
     const application = await Application.findOne( {_id: id });
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
