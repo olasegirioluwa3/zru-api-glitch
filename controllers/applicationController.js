@@ -428,7 +428,7 @@ const payForApplication = async (req, res) => {
     }
 
     paymentData.amount = parseInt(finalAmount, 10);
-    const callbackUrl = `${process.env.APP_WEBSITE_URL}/applications/payment/application/verify`;
+    const callbackUrl = `${process.env.APP_WEBSITE_URL}/portal/application/payment/application/verify`;
     const paymentDetails = await paymentGateway.initiatePayment(paymentData.amount, paymentData.currency, paymentData, callbackUrl);
     let paymentdetails = paymentDetails.data;
     paymentData = {
@@ -542,7 +542,7 @@ const payForAcceptance = async (req, res) => {
     }
 
     paymentData.amount = parseInt(finalAmount, 10);
-    const callbackUrl = `${process.env.APP_WEBSITE_URL}/api/user/applications/payment/acceptance/verify`;
+    const callbackUrl = `${process.env.APP_WEBSITE_URL}/portal/application/payment/acceptance/verify`;
     const paymentDetails = await paymentGateway.initiatePayment(paymentData.amount, paymentData.currency, paymentData, callbackUrl);
     let paymentdetails = paymentDetails.data;
     paymentData = {
