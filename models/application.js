@@ -9,7 +9,6 @@ const applicationSchema = new mongoose.Schema({
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Session',
-    required: true,
     default: null,
   },
   programId: {
