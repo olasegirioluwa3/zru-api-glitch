@@ -27,7 +27,7 @@ export const createApplication = async (req, res) => {
     }
     const courseName = program.programName;
 
-    const application = new Application({
+    const newApplication = new Application({
       userId,
       sessionId,
       programId,
@@ -35,8 +35,8 @@ export const createApplication = async (req, res) => {
       courseName
     });
 
-    const savedApplication = await application.save();
-    res.status(201).json({ message: 'Application submitted successfully', savedApplication });
+    const application = await newApplication.save();
+    res.status(201).json({ message: 'Application submitted successfully', application });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -588,7 +588,7 @@ const verifyApplicationPayment = async (req, res) => {
       paymentGateway = new StripeGateway();
     } else {
       return res.status(400).json({ message: 'Invalid payment gateway' });
-    } 
+    }
     paymentDetails = await paymentGateway.verifyPayment(reference);
 
     if (paymentDetails.data.status !== 'success') {
