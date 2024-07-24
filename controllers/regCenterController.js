@@ -13,27 +13,41 @@ const domain = process.env.APP_WEBSITE_URL || 'localhost:3000';
 
 const register = async (req, res, data) => {
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
+    // Generate an email verification token
     const token = generateToken();
     data.emailVerificationToken = token;
 
-    const verifyLink = `${domain}/account/email-verify/${token}`;
+    // Construct the verification link
+    const verifyLink = `${domain}/portal/reg-center/auth/email-verify/${token}`;
     const emailText = `To verify your account email, click on the following link: ${verifyLink}`;
 
+    // Create a new registration center
     const newRegCenter = new RegCenter(data);
     await newRegCenter.save();
 
+    // Send verification email
     await sendEmail(data.email, 'Activate your account', emailText);
 
-    res.status(201).json({ message: 'Registration successful' });
+    return res.status(201).json({ message: 'Registration successful' });
   } catch (error) {
-    console.error(error);
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      res.status(400).json({ message: 'Email or centerslug is empty or already exists' });
+    // console.error(error);
+
+    if (error.name === 'ValidationError') {
+      // Handle validation errors
+      return res.status(400).json({ message: 'Validation error', details: error.errors });
+    } else if (error.code === 11000) {
+      // Handle duplicate key errors
+      return res.status(400).json({ message: 'Email or Business Username already exists' });
+    } else if (error.name === 'MongoError') {
+      // Handle other MongoDB errors
+      return res.status(500).json({ message: 'Database error', details: error.message });
     } else {
-      res.status(500).json({ message: 'Registration failed, try again' });
+      // Handle all other errors
+      return res.status(500).json({ message: 'Registration failed, try again', details: error.message });
     }
   }
 };
