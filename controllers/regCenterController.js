@@ -119,7 +119,7 @@ const verifyEmail = async (req, res, data) => {
 async function forgotPassword(req, res, data) {
   try {
     const { email } = data;
-    const regcenter = await RegCenter.findOne({ where: { email } });
+    const regcenter = await RegCenter.findOne({ email: email });
 
     if (!regcenter) {
       return res.status(400).json({ message: 'Invalid email address' });
