@@ -129,7 +129,7 @@ async function forgotPassword(req, res, data) {
     regcenter.resetPasswordToken = token;
     regcenter.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
 
-    const resetLink = `${domain}/account/new-password/${token}`;
+    const resetLink = `${domain}/portal/regcenter/auth/resetpassword/${token}`;
     const emailText = `To reset your password, click on the following link: ${resetLink}`;
 
     if (await sendEmail(email, 'Password Reset', emailText)) {
@@ -157,7 +157,7 @@ async function verifyAccountEmail(req, res, data) {
     user.emailVerificationToken = '';
     user.emailVerificationStatus = 'activated';
 
-    const link = `${domain}/login`;
+    const link = `${domain}/portal/regcenter`;
     const emailText = `Account verified successfully, click on the following link to login: ${link}`;
 
     if (await sendEmail(user.email, 'Account verified successfully', emailText)) {
@@ -216,7 +216,7 @@ async function resetPasswordFinal(req, res, data) {
     regcenter.emailVerificationToken = '';
     regcenter.emailVerificationStatus = 'activated';
 
-    const link = `${domain}/account/signin`;
+    const link = `${domain}/portal/regcenter`;
     const emailText = `Reset password successfully, click on the following link to login: ${link}`;
 
     if (await sendEmail(regcenter.email, 'Reset Password Successfully', emailText)) {
