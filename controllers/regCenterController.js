@@ -99,7 +99,7 @@ const verifyEmail = async (req, res, data) => {
       return res.status(401).json({ message: 'Invalid reset token' });
     }
 
-    const link = `${domain}/login`;
+    const link = `${domain}/portal/regcenter`;
     const emailText = `Account verified successfully, click on the following link to login: ${link}`;
 
     if (await sendEmail(regcenter.email, 'Account verified successfully', emailText)) {
