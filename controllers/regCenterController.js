@@ -22,7 +22,7 @@ const register = async (req, res, data) => {
     data.emailVerificationToken = token;
 
     // Construct the verification link
-    const verifyLink = `${domain}/portal/reg-center/auth/email-verify/${token}`;
+    const verifyLink = `${domain}/portal/regcenter/auth/email-verify/${token}`;
     const emailText = `To verify your account email, click on the following link: ${verifyLink}`;
 
     // Create a new registration center
