@@ -74,9 +74,9 @@ const deleteDepartment = async (req, res) => {
 
 const listAllDepartments = async (req, res) => {
   try {
-    const departments = await FacultyDepartment.find({})
-    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    const departments = await FacultyDepartment.find();
     
+    console.log(departments);
     res.send(departments);
   } catch (error) {
     res.status(400).send(error);

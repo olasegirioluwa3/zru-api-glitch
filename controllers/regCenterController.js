@@ -177,7 +177,8 @@ async function verifyAccountEmail(req, res, data) {
 async function resetPasswordInit(req, res, data) {
   try {
     const { resetPasswordToken } = data;
-    const regcenter = await RegCenter.findOne({ where: { resetPasswordToken } });
+    console.log(resetPasswordToken);
+    const regcenter = await RegCenter.findOne({ resetPasswordToken: resetPasswordToken });
 
     if (!regcenter) {
       return res.status(401).json({ message: 'Invalid reset token' });
@@ -197,7 +198,7 @@ async function resetPasswordInit(req, res, data) {
 async function resetPasswordFinal(req, res, data) {
   try {
     const { resetPasswordToken, password } = data;
-    const regcenter = await RegCenter.findOne({ where: { resetPasswordToken } });
+    const regcenter = await RegCenter.findOne({ resetPasswordToken });
 
     if (!regcenter) {
       return res.status(401).json({ message: 'Invalid reset token' });
@@ -234,10 +235,10 @@ async function resetPasswordFinal(req, res, data) {
 
 async function resetPassword(req, res) {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._d;
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findByPk(userId);
+    const user = await RegCenter.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
