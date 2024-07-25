@@ -19,7 +19,9 @@ const createDepartment = async (req, res) => {
 
 const getDepartmentById = async (req, res) => {
   try {
-    const department = await FacultyDepartment.findById(req.params.id);
+    const department = await FacultyDepartment.findById(req.params.id)
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    
     if (!department) {
       return res.status(404).send({ message: 'Department not found' });
     }
@@ -32,7 +34,9 @@ const getDepartmentById = async (req, res) => {
 const getActiveDepartmentById = async (req, res) => {
   try {
     const { id } = req.params;
-    const department = await FacultyDepartment.findOne({ _id: id, departmentStatus: "active" });
+    const department = await FacultyDepartment.findOne({ _id: id, departmentStatus: "active" })
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+
     if (!department) {
       return res.status(404).send({ message: 'Department not found or not active' });
     }
@@ -70,7 +74,9 @@ const deleteDepartment = async (req, res) => {
 
 const listAllDepartments = async (req, res) => {
   try {
-    const departments = await FacultyDepartment.find({});
+    const departments = await FacultyDepartment.find({})
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    
     res.send(departments);
   } catch (error) {
     res.status(400).send(error);
@@ -79,7 +85,9 @@ const listAllDepartments = async (req, res) => {
 
 const listAllActiveDepartments = async (req, res) => {
   try {
-    const departments = await FacultyDepartment.find({ departmentStatus: "active" });
+    const departments = await FacultyDepartment.find({ departmentStatus: "active" })
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    
     res.send(departments);
   } catch (error) {
     res.status(400).send(error);
@@ -93,7 +101,9 @@ const listDepartmentsForFaculty = async (req, res) => {
     if (!faculty) {
       return res.status(401).json({ message: "Unknown faculty" });
     }
-    const departments = await FacultyDepartment.find({ facultyId });
+    const departments = await FacultyDepartment.find({ facultyId })
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    
     return res.status(200).json(departments);
   } catch (error) {
     res.status(400).send(error);
@@ -109,7 +119,9 @@ const listActiveDepartmentsForActiveFaculty = async (req, res) => {
       return res.status(401).json({ message: "Unknown faculty" });
     }
     
-    const departments = await FacultyDepartment.find({ facultyId, departmentStatus: "active" });
+    const departments = await FacultyDepartment.find({ facultyId, departmentStatus: "active" })
+    .populate('facultyId', 'facultyName facultyName facultyStatus');
+    
     return res.status(200).json(departments);
   } catch (error) {
     res.status(400).send(error);
