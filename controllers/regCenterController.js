@@ -264,7 +264,8 @@ async function resetPassword(req, res) {
 
 const listCandidates = async (req, res, data) => {
   try {
-    const candidates = await User.findAll({ where: { regCenterId: req.regcenter.id } });
+    console.log(req.user);
+    const candidates = await User.find({ regCenterId: req.user._id });
     res.status(200).json(candidates);
   } catch (error) {
     res.status(400).send(error);
@@ -273,7 +274,7 @@ const listCandidates = async (req, res, data) => {
 
 const viewCandidate = async (req, res, data) => {
   try {
-    const candidate = await User.findOne({ where: { id: req.params.id, regCenterId: req.regcenter.id } });
+    const candidate = await User.findOne({ id: req.params.id, regCenterId: req.user._id });
     if (!candidate) {
       return res.status(404).send();
     }

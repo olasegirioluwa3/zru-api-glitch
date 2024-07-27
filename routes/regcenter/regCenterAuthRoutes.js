@@ -80,5 +80,6 @@ export default function regCenterAuthRoutes(app, io, sequelize) {
     router.get('/applications', authRegCenterMiddleware, regCenterController.listApplications);
     router.patch('/applications/:id', authRegCenterMiddleware, regCenterController.updateApplication);
     router.post('/withdraw', authRegCenterMiddleware, regCenterController.withdraw);
+    
     app.use('/api/regcenter', router);
 }
