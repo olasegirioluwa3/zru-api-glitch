@@ -175,17 +175,17 @@ const listActiveProgramsForActiveFaculty = async (req, res) => {
 };
 
 const facultyProgramController = {
-    createDepartmentProgram,
-    getDepartmentProgramById,
-    getActiveDepartmentProgramById,
-    updateDepartmentProgram,
-    deleteDepartmentProgram,
-    listAllPrograms,
-    listAllActivePrograms,
-    listProgramsForDepartment,
-    listActiveProgramsForActiveDepartment,
-    listProgramsForFaculty,
-    listActiveProgramsForActiveFaculty
+  createDepartmentProgram,
+  getDepartmentProgramById,
+  getActiveDepartmentProgramById,
+  updateDepartmentProgram,
+  deleteDepartmentProgram,
+  listAllPrograms,
+  listAllActivePrograms,
+  listProgramsForDepartment,
+  listActiveProgramsForActiveDepartment,
+  listProgramsForFaculty,
+  listActiveProgramsForActiveFaculty
 };
 
 export default facultyProgramController;

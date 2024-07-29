@@ -22,7 +22,8 @@ const createCourse = async (req, res) => {
 
 const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await Course.findById(req.params.id)
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     if (!course) {
       return res.status(404).send({ message: 'Course not found' });
     }
@@ -35,7 +36,8 @@ const getCourseById = async (req, res) => {
 const getActiveCourseById = async (req, res) => {
   try {
     const { id } = req.params;
-    const course = await Course.findOne({ _id: id, courseStatus: "active" });
+    const course = await Course.findOne({ _id: id, courseStatus: "active" })
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     if (!course) {
       return res.status(404).send({ message: 'Course not found' });
     }
@@ -73,7 +75,8 @@ const deleteCourse = async (req, res) => {
 
 const listCoursesForProgram = async (req, res) => {
   try {
-    const courses = await Course.find({ programId: req.params.programId });
+    const courses = await Course.find({ programId: req.params.programId })
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     res.send(courses);
   } catch (error) {
     res.status(400).send(error);
@@ -87,7 +90,8 @@ const listActiveCoursesForProgram = async (req, res) => {
     if (!departmentProgram) {
       return res.status(404).send({ message: 'Program not found' });
     }
-    const courses = await Course.find({ programId: programId, courseStatus: "active" });
+    const courses = await Course.find({ programId: programId, courseStatus: "active" })
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     res.send(courses);
   } catch (error) {
     res.status(400).send(error);
