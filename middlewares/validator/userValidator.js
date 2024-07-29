@@ -140,8 +140,8 @@ async function validateUserData( input ) {
       errors.push('Country is required');
     } else if (country.length < 1) {
       errors.push('Country must be at least 1 characters long');
-    } else if (country !== country.toLowerCase()) {
-      errors.push('Country must be all lowercase');
+    } else if (country !== country.toUpperCase()) {
+      errors.push('Country must be all Uppercase');
     } else {
       data.country = country;
     }
@@ -152,8 +152,8 @@ async function validateUserData( input ) {
       errors.push('State is required');
     } else if (state.length < 1) {
       errors.push('State must be at least 1 characters long');
-    } else if (state !== state.toLowerCase()) {
-      errors.push('State must be all lowercase');
+    } else if (state !== state.toUpperCase()) {
+      errors.push('State must be all Uppercase');
     } else {
       data.state = state;
     }
