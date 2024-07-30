@@ -30,7 +30,7 @@ async function registerUser(req, res, data) {
     const token = generateToken();
     data.emailVerificationToken = token;
 
-    const verifyLink = `${domain}/account/email-verify/${token}`;
+    const verifyLink = `${domain}/portal/application/auth/email-verify/${token}`;
     const emailText = `To verify your account email, click on the following link: ${verifyLink}`;
 
     const newUser = new User(data);
@@ -201,7 +201,7 @@ async function forgotPassword(req, res, data) {
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
 
-    const resetLink = `${domain}/account/new-password/${token}`;
+    const resetLink = `${domain}/portal/application/auth/forgotpassword/${token}`;
     const emailText = `To reset your password, click on the following link: ${resetLink}`;
 
     await user.save();
@@ -231,7 +231,7 @@ async function verifyAccountEmail(req, res, data) {
       return res.status(401).json({ message: "Invalid reset token" });
     }
 
-    const link = `${domain}/login`;
+    const link = `${domain}/portal/application`;
     const emailText = `Account verified successfully, click on the following link to login: ${link}`;
 
     await sendEmail(user.email, "Account verified successfully", emailText);
@@ -289,7 +289,7 @@ async function resetPasswordFinal(req, res, data) {
     user.emailVerificationToken = "";
     user.emailVerificationStatus = "activated";
 
-    const link = `${domain}/account/signin`;
+    const link = `${domain}/portal/application`;
     const emailText = `Reset password successfully, click on the following link to login: ${link}`;
 
     await sendEmail(user.email, "Reset Password Successfully", emailText);

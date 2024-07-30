@@ -14,7 +14,7 @@ const allocateCourse = async (req, res) => {
 
     const department = await FacultyProgram.findById(programId);
     if (!department) {
-      return res.status(404).json({ message: "Unknown department" });
+      return res.status(404).json({ message: "Unknown program" });
     }
 
     const courseAllocated = await CourseAllocation.findOne({ courseId: courseId, programId: programId });
@@ -32,7 +32,9 @@ const allocateCourse = async (req, res) => {
 
 const getCourseAllocationById = async (req, res) => {
   try {
-    const courseAllocation = await CourseAllocation.findById(req.params.id);
+    const courseAllocation = await CourseAllocation.findById(req.params.id)
+    .populate('courseId', 'courseTitle courseCode courseCredit degreeType courseHour courseStatus')
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     if (!courseAllocation) {
       return res.status(404).send();
     }
@@ -70,7 +72,9 @@ const deleteCourseAllocation = async (req, res) => {
 
 const listCourseAllocationsForProgram = async (req, res) => {
   try {
-    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId });
+    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId })
+    .populate('courseId', 'courseTitle courseCode courseCredit degreeType courseHour courseStatus')
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     res.send(courseAllocations);
   } catch (error) {
     res.status(400).send(error);
@@ -84,7 +88,9 @@ const listCourseAllocationsForActiveProgram = async (req, res) => {
     if (!program) {
       return res.status(404).send({ message: 'Program not found' });
     }
-    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId });
+    const courseAllocations = await CourseAllocation.find({ programId: req.params.programId })
+    .populate('courseId', 'courseTitle courseCode courseCredit degreeType courseHour courseStatus')
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     res.send(courseAllocations);
   } catch (error) {
     res.status(400).send(error);
@@ -93,7 +99,9 @@ const listCourseAllocationsForActiveProgram = async (req, res) => {
 
 const listCourseAllocations = async (req, res) => {
   try {
-    const courseAllocations = await CourseAllocation.find();
+    const courseAllocations = await CourseAllocation.find()
+    .populate('courseId', 'courseTitle courseCode courseCredit degreeType courseHour courseStatus')
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
     res.send(courseAllocations);
   } catch (error) {
     res.status(400).send(error);
