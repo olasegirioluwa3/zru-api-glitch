@@ -73,6 +73,16 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+const listAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find()
+    .populate('programId', 'programName programCode programCourse degreeType programDuration graduationRequirements programStatus');
+    res.send(courses);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
 const listCoursesForProgram = async (req, res) => {
   try {
     const courses = await Course.find({ programId: req.params.programId })
@@ -104,6 +114,7 @@ const courseController = {
   getActiveCourseById,
   updateCourse,
   deleteCourse,
+  listAllCourses,
   listCoursesForProgram,
   listActiveCoursesForProgram
 };

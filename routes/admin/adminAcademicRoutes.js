@@ -12,6 +12,7 @@ const router = express.Router();
 export default function adminAcademicRoutes(app, io, sequelize) {
     // Admin can manage courses
     router.post('/courses', authenticateToken, courseController.createCourse);
+    router.get('/courses', authenticateToken, courseController.listAllCourses);
     router.get('/courses/:id', authenticateToken, courseController.getCourseById);
     router.put('/courses/:id', authenticateToken, courseController.updateCourse);          
     router.delete('/courses/:id', authenticateToken, courseController.deleteCourse);
