@@ -73,6 +73,7 @@ export default function regCenterAuthRoutes(app, io, sequelize) {
             res.status(500).send({ status: "failed", message: 'Failed to reset password', error: error.message });
         }
     });
+    
     router.get('/candidates', authRegCenterMiddleware, regCenterController.listCandidates);
     router.get('/candidates/:id', authRegCenterMiddleware, regCenterController.viewCandidate);
     router.patch('/candidates/:id', authRegCenterMiddleware, regCenterController.updateCandidate);
@@ -81,5 +82,8 @@ export default function regCenterAuthRoutes(app, io, sequelize) {
     router.patch('/applications/:id', authRegCenterMiddleware, regCenterController.updateApplication);
     router.post('/withdraw', authRegCenterMiddleware, regCenterController.withdraw);
     
+    // public routes
+    router.get('/public/profile/:centerSlug', regCenterController.getRegCenterByCenterSlug);
+
     app.use('/api/regcenter', router);
 }
