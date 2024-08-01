@@ -274,11 +274,7 @@ async function getRegCenterByCenterSlug(req, res, data) {
       return res.status(401).json({ message: 'Unknown RegCenter' });
     }
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Regcenter was found',
-      regcenter,
-    });
+    res.status(200).json(regcenter);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to get registration center' });
