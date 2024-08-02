@@ -3,7 +3,7 @@ import FacultyProgram from '../models/facultyprogram.js';
 
 // Create a new payment type
 const createPaymentType = async (req, res) => {
-  const { programId, ptPurpose, ptAmount, ptDefaultCurrency, ptAmountInternationalStudent, ptDefaultCurrencyInternationalStudent, ptStatus, courseLevel, courseSemester, ptDetails } = req.body;
+  const { ptName, programId, ptPurpose, ptAmount, ptDefaultCurrency, ptAmountInternationalStudent, ptDefaultCurrencyInternationalStudent, ptStatus, courseLevel, courseSemester, ptDetails } = req.body;
   try {
     const program = await FacultyProgram.findById(programId);
 
@@ -12,6 +12,7 @@ const createPaymentType = async (req, res) => {
     }
 
     const paymentType = new PaymentType({
+      ptName,
       programId,
       ptPurpose,
       ptAmount,
@@ -85,13 +86,14 @@ const getActivePaymentTypeById = async (req, res) => {
 // Update a payment type
 const updatePaymentType = async (req, res) => {
   const { id } = req.params;
-  const { programId, ptPurpose, ptAmount, ptDefaultCurrency, ptAmountInternationalStudent, ptDefaultCurrencyInternationalStudent, ptStatus, courseLevel, courseSemester, ptDetails } = req.body;
+  const { ptName, programId, ptPurpose, ptAmount, ptDefaultCurrency, ptAmountInternationalStudent, ptDefaultCurrencyInternationalStudent, ptStatus, courseLevel, courseSemester, ptDetails } = req.body;
   try {
     const paymentType = await PaymentType.findById(id);
     if (!paymentType) {
       return res.status(404).json({ message: 'Payment type not found' });
     }
 
+    paymentType.ptName = ptName || paymentType.ptName;
     paymentType.programId = programId || paymentType.programId;
     paymentType.ptPurpose = ptPurpose || paymentType.ptPurpose;
     paymentType.ptAmount = ptAmount || paymentType.ptAmount;

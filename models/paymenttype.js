@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const paymentTypeSchema = new mongoose.Schema({
+  ptName: {
+    type: String,
+    required: true,
+    default: '',
+  },
   programId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FacultyProgram',
