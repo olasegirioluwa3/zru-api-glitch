@@ -12,7 +12,7 @@ const paymentTypeSchema = new mongoose.Schema({
   },
   ptPurpose: {
     type: String,
-    enum: ['application', 'acceptance', 'tuition', 'tuition-combined', 'portal', 'cbt', 'laboratory', 'hostel', 'library'],
+    enum: ['application', 'acceptance', 'tuition', 'tuition-combined', 'portal', 'cbt', 'laboratory', 'hostel', 'library', 'graduation'],
     default: 'tuition',
   },
   ptAmount: {
@@ -37,7 +37,7 @@ const paymentTypeSchema = new mongoose.Schema({
   },
   ptStatus: {
     type: String,
-    enum: ['pending', 'removed', 'active'],
+    enum: ['pending', 'removed', 'ínreview', 'active'],
     default: 'pending',
   },
   courseLevel: {
