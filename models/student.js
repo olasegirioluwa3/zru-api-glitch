@@ -27,8 +27,20 @@ const studentSchema = new mongoose.Schema({
     },
     studentStatus: {
         type: String,
-        enum: ['graduate', 'active', 'transferred', 'pending', 'expelled'],
+        enum: ['graduate', 'active', 'transferred', 'pending', 'expelled', 'deferred'],
         default: 'pending',
+    },
+    lastMatricNumber: {
+        type: String,
+        default: '',
+    },
+    studentDetails: {
+        type: String,
+        default: '',
+    },
+    studentshipLog: { // only to be appended
+        type: String,
+        default: '',
     },
 });
 

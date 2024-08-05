@@ -57,7 +57,7 @@ const paymentTypeSchema = new mongoose.Schema({
   },
   ptSubscriptionFrequency: {
     type: String,
-    enum: ['', 'monthly', 'dayly', 'weekly', 'yearly'],
+    enum: ['', 'monthly', 'daily', 'weekly', 'yearly'],
     default: '',
   },
   ptDetails: {
