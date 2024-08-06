@@ -284,7 +284,7 @@ async function getRegCenterByCenterSlug(req, res, data) {
 async function getRegCenterById(req, res, data) {
   try {
     const { id } = req.params;
-    const regcenter = await RegCenter.findByPk(
+    const regcenter = await RegCenter.findById(
       id,
       'centerName centerSlug profilePicture coverPicture address country state city localGovernment zipCode emailVerificationStatus accountStatus'
     );
