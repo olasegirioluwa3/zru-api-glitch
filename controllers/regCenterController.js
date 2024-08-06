@@ -281,6 +281,25 @@ async function getRegCenterByCenterSlug(req, res, data) {
   }
 }
 
+async function getRegCenterById(req, res, data) {
+  try {
+    const { id } = req.params;
+    const regcenter = await RegCenter.findByPk(
+      id,
+      'centerName centerSlug profilePicture coverPicture address country state city localGovernment zipCode emailVerificationStatus accountStatus'
+    );
+
+    if (!regcenter) {
+      return res.status(401).json({ message: 'Unknown RegCenter' });
+    }
+
+    res.status(200).json(regcenter);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to get registration center' });
+  }
+}
+
 const listCandidates = async (req, res, data) => {
   try {
     console.log(req.user);
@@ -376,6 +395,7 @@ const regCenterController = {
   resetPasswordInit,
   resetPasswordFinal,
   getRegCenterByCenterSlug,
+  getRegCenterById,
   listCandidates,
   viewCandidate,
   updateCandidate,

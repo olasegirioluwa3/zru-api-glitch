@@ -84,6 +84,7 @@ export default function regCenterAuthRoutes(app, io, sequelize) {
     
     // public routes
     router.get('/public/profile/:centerSlug', regCenterController.getRegCenterByCenterSlug);
+    router.get('/public/profile/:id/view', regCenterController.getRegCenterById);
 
     app.use('/api/regcenter', router);
 }
