@@ -44,7 +44,10 @@ export const createApplication = async (req, res) => {
 
 export const getAllApplications = async (req, res) => {
   try {
-    const applications = await Application.find().populate('userId', 'firstName lastName email');
+    const applications = await Application.find()
+    .populate('userId', 'firstName lastName email')
+    .populate('programId', 'programCourse programName programCode degreeType programDuration departmentId')
+    .populate('sessionId', 'sessionName sessionStart sessionEnd sessionDescription');
     res.status(200).json(applications);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -241,7 +244,8 @@ export const deleteApplication = async (req, res) => {
 export const getApplicationsByUserId = async (req, res) => {
   const { userId } = req.params;
   try {
-    const applications = await Application.find({ userId }).populate('userId', 'firstName lastName email');
+    const applications = await Application.find({ userId })
+    .populate('userId', 'firstName lastName email');
     res.status(200).json(applications);
   } catch (error) {
     res.status(500).json({ error: error.message });
